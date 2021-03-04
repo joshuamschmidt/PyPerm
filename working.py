@@ -1,3 +1,16 @@
+import PySetPerm as psp
+import pandas as pd
+import pyranges as pr
+import numpy as np
+import pickle
+from itertools import repeat
+import random
+import multiprocessing
+from multiprocessing import Pool
+from scipy.stats import rankdata
+import inspect
+
+
 #----
 species = ['eastern','central','internal']
 start=time.perf_counter()
