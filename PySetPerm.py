@@ -20,7 +20,7 @@ class InputClass:
         self.background = pypermr.read_variant_file(background_file)
         self.background_features = pypermr.intersect_variants_features(self.background,features)
         self.background_features = feature_list(self.background_features)
-        self.candidate_features =pypermr.intersect_variants_features(self.candidates,features)
+        self.candidate_features = pypermr.intersect_variants_features(self.candidates,features)
         self.candidate_array = candidate_array(self.candidate_features)
         self.n_candidate_features = permutation_fset_Mintersect( (self.candidate_array,annotation_array) )
 
