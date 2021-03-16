@@ -16,13 +16,30 @@ class InputClass:
     # constructor
     def __init__(self,candidate_file,background_file,features,annotation_array):
         # initializing instance variable
-        self.candidates = pypermr.read_variant_file(candidate_file)
-        self.background = pypermr.read_variant_file(background_file)
-        self.background_features = pypermr.intersect_variants_features(self.background,features)
+        self.candidates = _read_variant_file(candidate_file)
+        self.background = _read_variant_file(background_file)
+        self.background_features = _intersect_variants_features(self.background,features)
         self.background_features = feature_list(self.background_features)
-        self.candidate_features = pypermr.intersect_variants_features(self.candidates,features)
+        self.candidate_features = _intersect_variants_features(self.candidates,features)
         self.candidate_array = candidate_array(self.candidate_features)
         self.n_candidate_features = permutation_fset_Mintersect( (self.candidate_array,annotation_array) )
+       
+        def _read_variant_file(input_file):
+			variant_table=pd.read_table(
+			input_file,
+			header=0,
+			names=['Chromosome',"Start","End"],
+			dtype={"Chromosome":str,"Start":int,"End":int})
+		return(variant_table)
+
+		def _intersect_variants_features(variants, features):
+			vtable=pr.PyRanges(vtable).join(pr.PyRanges(features)).df
+			return(vtable)
+
+		def feature_list(ftable):
+	ftable['id']=ftable.Chromosome.astype(str).str.cat(ftable.Start.astype(str), sep='_')
+	ftable=eastern_bg_genes.groupby('id')['idx'].apply(list).tolist()
+	return(ftable)
 
 
 class FeaturesClass:
@@ -37,7 +54,7 @@ class FeaturesClass:
 class PermutationClass:
 	# constructor
 	def __init__(self,background_features,n_candidate_features,n_permutations,n_cores)
-
+	
 
 
 class AnnotationSetClass:
