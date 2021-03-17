@@ -88,9 +88,9 @@ def calculate_p_values(c_set_n, p_set_n):
         for i in range(p_set_n.shape[1]):    
             p_e.append((np.size(np.where(p_set_n[:,i]>=c_set_n[i]))+1)/(n_perm+1))
             p_d.append((np.size(np.where(p_set_n[:,i]<=c_set_n[i]))+1)/(n_perm+1))
-    return([p_e,p_d])
+    return((p_e,p_d))
 
-def make_results_table(cand_features,annotation,filtered_annotation_ids,mean_per_set,p_lists,n_per_set):
+def make_results_table(cand_features,annotation,filtered_annotation_ids,p_lists,n_per_set):
     cand_set=set(cand_features['feature'].values)
     cand_genes_in_sets = annotation.groupby('id')['feature'].apply(lambda x: np.unique(list(set(x).intersection(cand_set))))
     cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(filtered_annotation_ids)])
@@ -100,6 +100,7 @@ def make_results_table(cand_features,annotation,filtered_annotation_ids,mean_per
     n_genes_in_sets = n_genes_in_sets.reset_index(level=['id', 'name'])
     out=n_genes_in_sets.join(cand_genes_in_sets.set_index('id'),on='id')
     out['n_candidates_in_set'] = [len(l) for l in out['candidate_features']]
+    mean_per_set = np.array(np.mean(n_per_set,axis=0))
     out['mean_permutation_n'] = mean_per_set
     out_col_names = out.columns.values
     out_col_names[2] = 'feature_set_n'
@@ -249,8 +250,10 @@ class Permutation:
   
 class SetPerPerm:
     # constructor
-    def __init__(self, permutations, annotation_sets, n_cores):
+    def __init__(self, permutations, annotation_sets, n_cores, n_candidates_per_set):
         self.setNperPerm = multicore_intersect(permutations, annotation_sets, n_cores)
+        self.mean_per_set = np.array(np.mean(self.setNperPerm,axis=0))
+        self.p_enrichment, self.p_depletion = calculate_p_values(n_candidates_per_set, self.setNperPerm)
 
 #--- redundant and/or not used anymore
 
