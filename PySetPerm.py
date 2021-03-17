@@ -1,13 +1,74 @@
 import pandas as pd
 import pyranges as pr
 import numpy as np
-import pickle
+import concurrent.futures as cf
 from itertools import repeat
-import random
 from scipy.stats import rankdata
 from scipy.sparse import csr_matrix
 import inspect
+from random import sample
+import pickle
 
+
+
+#--- global functions
+def permutation_fset_intersect(args):
+    permutation_array = args[0]
+    function_array = args[1]
+    max_z = max(permutation_array.max(), function_array.max()) + 1
+    
+    def csr_sparse(A, z):
+        m, n = A.shape
+        indptr = np.arange(0, m*n+1, n)
+        data = np.ones(m*n, dtype=np.uint16)
+        return csr_matrix((data, A.ravel(), indptr), shape=(m,z))
+    
+    intersection = csr_sparse(permutation_array,max_z ) * csr_sparse(function_array, max_z).T
+    intersection = intersection.todense()
+    return np.squeeze(np.asarray(intersection))
+
+def listnp_to_padded_nparray(listnp):
+    max_width=np.max([np.size(l) for l in listnp])
+    padded_array=np.asarray([np.pad(l,(0,max_width-np.size(l)),mode='constant',constant_values=(0,0) ) for l in listnp])
+    return(padded_array.astype('uint16'))
+
+def annotation_sets_to_array(annotation,features,min_size=3):
+    sets = annotation.join(features.set_index('feature'),on='feature').groupby('id')['idx'].apply(list)
+    set_array =  [s for s in sets if len(s) >= min_size]
+    set_array = np.sort(listnp_to_padded_nparray(set_array))
+    set_names =  [i for i,s in enumerate(sets) if len(s) >= min_size]
+    set_names = sets.index[set_names]
+    return set_array, set_names
+
+def sample_from_feature_list(feature_list,n_total):
+    out = pd.unique([item for sublist in sample(feature_list,n_total) for item in sublist])
+    while len(out) < n_total:
+        out=np.append(out,pd.unique([item for sublist in sample(feature_list,n_total) for item in sublist]))
+        out=pd.unique(out)
+    out = out[:n_total]
+    out = np.sort(out)
+    return(out.astype('uint16'))
+
+def array_of_resamples_tup(args):
+    feature_list,n_total,n_reps = args[0],args[1],args[2]
+    out=np.ndarray((n_reps,n_total),dtype='uint16')
+    for i in range(n_reps):
+        out[i] = sample_from_feature_list(feature_list, n_total)
+    return(out)
+
+def n_jobs_core_list(n_reps,n_cores):
+    quotient, remainder = divmod(n_reps, n_cores)
+    n_per_core = [quotient]*n_cores
+    for i in range(remainder):
+        n_per_core[i] = n_per_core[i]+1
+    return(n_per_core)
+
+def multicore_resample(n_features,n_reps,n_cores,feature_list):
+    n_per_core = n_jobs_core_list(n_reps, n_cores)
+    with cf.ProcessPoolExecutor(max_workers=n_cores) as executor:
+        results = executor.map(array_of_resamples_tup,zip(repeat(feature_list),repeat(n_features),n_per_core))
+    results = list(results)
+    return(np.concatenate(results))
 
 #--- classes
 class Features:
@@ -102,81 +163,22 @@ class Input:
         self.n_candidate_per_function = permutation_fset_intersect( (self.candidate_array,annotation_array) )
 
 class Permutation:
-	# constructor
-	def __init__(self,background_features,n_candidate_features,n_permutations,n_cores)
-	
-
-
-
-	
+    # constructor
+    def __init__(self,background_features,n_candidate_features,n_permutations,n_cores):
+        self.n_candidate_features = n_candidate_features
+        self.n_permutations = n_permutations
+        self.n_cores = n_cores
+        self.permutations = multicore_resample(self.n_candidate_features, self.n_permutations, self.n_cores, background_features )
+  
 
 #--- complete functions
-    
-def permutation_fset_intersect(args):
-    permutation_array = args[0]
-    function_array = args[1]
-    max_z = max(permutation_array.max(), function_array.max()) + 1
-    
-    def csr_sparse(A, z):
-        m, n = A.shape
-        indptr = np.arange(0, m*n+1, n)
-        data = np.ones(m*n, dtype=np.uint16)
-        return csr_matrix((data, A.ravel(), indptr), shape=(m,z))
-    
-    intersection = csr_sparse(permutation_array,max_z ) * csr_sparse(function_array, max_z).T
-    intersection = intersection.todense()
-    return np.squeeze(np.asarray(intersection))
-
-
-
-def sample_from_feature_list(feature_list,n_total):
-    out = pd.unique([item for sublist in sample(feature_list,n_total) for item in sublist])
-    while len(out) < n_total:
-        out=np.append(out,pd.unique([item for sublist in sample(feature_list,n_total) for item in sublist]))
-        out=pd.unique(out)
-    out = out[:n_total]
-    out = np.sort(out)
-    return(out.astype('uint16'))
-
 def array_of_resamples(feature_list,n_total,n_reps):
     out=np.ndarray((n_reps,n_total),dtype='uint16')
     for i in range(n_reps):
         out[i] = sample_from_feature_list(feature_list, n_total)
     return(out)
 
-def array_of_resamples_tup(args):
-    feature_list,n_total,n_reps = args[0],args[1],args[2]
-    out=np.ndarray((n_reps,n_total),dtype='uint16')
-    for i in range(n_reps):
-        out[i] = sample_from_feature_list(feature_list, n_total)
-    return(out)
-
-def n_jobs_core_list(n_reps,n_cores):
-	quotient, remainder = divmod(n_reps, n_cores)
-	n_per_core = [quotient]*n_cores
-	for i in range(remainder):
-		n_per_core[i] = n_per_core[i]+1
-	return(n_per_core)
-
-def multicore_resample(feature_list,n_features,n_reps,n_cores):
-	n_per_core = n_jobs_core_list(n_reps, n_cores)
-	with concurrent.futures.ProcessPoolExecutor(max_workers=n_cores) as executor:
-		results = executor.map(array_of_resamples_tup,zip(repeat(feature_list),repeat(n_features),n_per_core))
-	results = list(results)
-	return(np.concatenate(results))
-
-def listnp_to_padded_nparray(listnp):
-    max_width=np.max([np.size(l) for l in listnp])
-    padded_array=np.asarray([np.pad(l,(0,max_width-np.size(l)),mode='constant',constant_values=(0,0) ) for l in listnp])
-    return(padded_array.astype('uint16'))
-
-def annotation_sets_to_array(annotation,features,min_size=3):
-	sets = annotation.join(features.set_index('feature'),on='feature').groupby('id')['idx'].apply(list)
-	set_array =  [s for s in sets if len(s) >= min_size]
-	set_array = np.sort(listnp_to_padded_nparray(set_array))
-	set_names =  [i for i,s in enumerate(sets) if len(s) >= min_size]
-	set_names = sets.index[set_names]
-	return set_array, set_names
+    
 
 def random_check_intersection(n_per_set,perms,sets,check_n):
 	check_idxs = []
