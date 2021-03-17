@@ -9,8 +9,6 @@ import inspect
 from random import sample
 import pickle
 
-
-
 #--- global functions
 def permutation_fset_intersect(args):
     permutation_array = args[0]
@@ -76,6 +74,78 @@ def multicore_intersect(permutation_array, functionalset_array,n_cores):
         results = executor.map(permutation_fset_intersect,zip(split_permutation_array, repeat(functionalset_array)))
     results = list(results)
     return(np.concatenate(results))
+
+
+
+def calculate_p_values(c_set_n, p_set_n):
+    p_e = []
+    p_d = []
+    n_perm =  p_set_n.shape[0]
+    if n_perm == 1:
+        p_e.append((np.size(np.where(p_set_n>=c_set_n))+1)/(n_perm+1))
+        p_d.append((np.size(np.where(p_set_n<=c_set_n))+1)/(n_perm+1))
+    else: 
+        for i in range(p_set_n.shape[1]):    
+            p_e.append((np.size(np.where(p_set_n[:,i]>=c_set_n[i]))+1)/(n_perm+1))
+            p_d.append((np.size(np.where(p_set_n[:,i]<=c_set_n[i]))+1)/(n_perm+1))
+    return([p_e,p_d])
+
+def make_results_table(cand_features,annotation,filtered_annotation_ids,mean_per_set,p_lists,n_per_set):
+    cand_set=set(cand_features['feature'].values)
+    cand_genes_in_sets = annotation.groupby('id')['feature'].apply(lambda x: np.unique(list(set(x).intersection(cand_set))))
+    cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(filtered_annotation_ids)])
+    cand_genes_in_sets = cand_genes_in_sets.reset_index(level=['id'])
+    cand_genes_in_sets.columns = ['id','candidate_features']
+    n_genes_in_sets = pd.DataFrame(annotation.groupby(['id','name'])['feature'].nunique()[filtered_annotation_ids])
+    n_genes_in_sets = n_genes_in_sets.reset_index(level=['id', 'name'])
+    out=n_genes_in_sets.join(cand_genes_in_sets.set_index('id'),on='id')
+    out['n_candidates_in_set'] = [len(l) for l in out['candidate_features']]
+    out['mean_permutation_n'] = mean_per_set
+    out_col_names = out.columns.values
+    out_col_names[2] = 'feature_set_n'
+    out.columns = out_col_names
+    out['emp_p_e'] = p_lists[0]
+    out['emp_p_d'] = p_lists[1]
+    out['fdr_e'] = fdr_from_p_matrix(n_per_set,out['emp_p_e'],method='enrichment')
+    out['fdr_d'] = fdr_from_p_matrix(n_per_set,out['emp_p_d'],method='depletion')
+    out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
+    out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
+    out = out.sort_values('emp_p_e')
+    return(out)
+
+def fdr_from_p_matrix(perm_n_per_set,obs_p,method='enrichment'):
+    p_matrix=perm_p_matrix(perm_n_per_set,method)
+    obs_p_arr = np.asarray(obs_p)
+    n_perm = p_matrix.shape[0]
+    fdr_p = np.empty(len(obs_p),dtype='float64')
+    obs_order = np.argsort(obs_p_arr)
+    p_val, p_counts = np.unique(p_matrix,return_counts=True)
+    current_max_fdr = 0
+    for i, p_idx in enumerate(obs_order):
+        if current_max_fdr==1:
+            fdr_p[p_idx]=1
+        else:
+            obs=np.size(np.where(obs_p_arr<=obs_p_arr[p_idx]))
+            exp=np.sum(p_counts[np.where(p_val <= obs_p_arr[p_idx])])/n_perm
+            i_fdr = exp/obs
+            if i_fdr > current_max_fdr and i_fdr < 1:
+                fdr_p[p_idx] = i_fdr
+                current_max_fdr = i_fdr
+            elif i_fdr < current_max_fdr and i_fdr < 1:
+                fdr_p[p_idx] = current_max_fdr
+            else:
+                fdr_p[p_idx] = 1
+                current_max_fdr = 1
+    return(fdr_p)
+
+def p_adjust_bh(p):
+    """Benjamini-Hochberg p-value correction for multiple hypothesis testing."""
+    p = np.asfarray(p)
+    by_descend = p.argsort()[::-1]
+    by_orig = by_descend.argsort()
+    steps = float(len(p)) / np.arange(len(p), 0, -1)
+    q = np.minimum(1, np.minimum.accumulate(steps * p[by_descend]))
+    return q[by_orig]
 
 #--- classes
 class Features:
@@ -178,12 +248,23 @@ class Permutation:
         self.permutations = multicore_resample(self.n_candidate_features, self.n_permutations, self.n_cores, background_features )
   
 class SetPerPerm:
-	# constructor
-	def __init__(self, permutations, annotation_sets, n_cores):
-		self.setNperPerm = multicore_intersect(permutations, annotation_sets, n_cores)
+    # constructor
+    def __init__(self, permutations, annotation_sets, n_cores):
+        self.setNperPerm = multicore_intersect(permutations, annotation_sets, n_cores)
+
+#--- redundant and/or not used anymore
+
+def perm_p_matrix(perm_n_per_set,method='enrichment'):
+    n_perms, n_sets = perm_n_per_set.shape
+    out=np.ndarray((n_perms,n_sets),dtype='float64')
+    method_int = 1
+    if method=='enrichment':
+        method_int = -1
+    for i in range(n_sets):
+        out[:,i]=rankdata(method_int*n_per_set[:,i],method='max')/n_perms
+    return(out)
 
 
-#--- complete functions
 def array_of_resamples(feature_list,n_total,n_reps):
     out=np.ndarray((n_reps,n_total),dtype='uint16')
     for i in range(n_reps):
@@ -191,87 +272,11 @@ def array_of_resamples(feature_list,n_total,n_reps):
     return(out)
 
 def random_check_intersection(n_per_set,perms,sets,check_n):
-	check_idxs = []
-	n_perms=np.shape(perms)[0]
-	n_sets=np.shape(sets)[0]
-	for i in range(check_n):
-		j=sample(range(0,n_perms-1),1)[0]
-		k=sample(range(0,n_sets-1),1)[0]
-		check_idxs.append( len(set(perms[j]).intersection(set(sets[k])))==n_per_set[j][k] )
-	return(check_idxs)
-
-
-
-def calculate_p_values(c_set_n, p_set_n):
-	p_e = []
-	p_d = []
-	n_perm =  p_set_n.shape[0]
-	if len(n_per_set.shape)==1:
-		p_e.append((np.size(np.where(p_set_n>=c_set_n))+1)/(n_perm+1))
-		p_d.append((np.size(np.where(p_set_n<=c_set_n))+1)/(n_perm+1))
-	else: 
-		for i in range(p_set_n.shape[1]):	
-			p_e.append((np.size(np.where(p_set_n[:,i]>=c_set_n[i]))+1)/(n_perm+1))
-			p_d.append((np.size(np.where(p_set_n[:,i]<=c_set_n[i]))+1)/(n_perm+1))
-	return([p_e,p_d])
-
-def make_results_table(cand_features,annotation,filtered_annotation_ids,mean_per_set,p_lists,n_per_set):
-	cand_set=set(cand_features['feature'].values)
-	cand_genes_in_sets = annotation.groupby('id')['feature'].apply(lambda x: np.unique(list(set(x).intersection(cand_set))))
-	cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(filtered_annotation_ids)])
-	cand_genes_in_sets = cand_genes_in_sets.reset_index(level=['id'])
-	cand_genes_in_sets.columns = ['id','candidate_features']
-	n_genes_in_sets = pd.DataFrame(annotation.groupby(['id','name'])['feature'].nunique()[filtered_annotation_ids])
-	n_genes_in_sets = n_genes_in_sets.reset_index(level=['id', 'name'])
-	out=n_genes_in_sets.join(cand_genes_in_sets.set_index('id'),on='id')
-	out['n_candidates_in_set'] = [len(l) for l in out['candidate_features']]
-	out['mean_permutation_n'] = mean_per_set
-	out_col_names = out.columns.values
-	out_col_names[2] = 'feature_set_n'
-	out.columns = out_col_names
-	out['emp_p_e'] = p_lists[0]
-	out['emp_p_d'] = p_lists[1]
-	out['fdr_e'] = fdr_from_p_matrix(n_per_set,out['emp_p_e'],method='enrichment')
-	out['fdr_d'] = fdr_from_p_matrix(n_per_set,out['emp_p_d'],method='depletion')
-	out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
-	out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
-	out = out.sort_values('emp_p_e')
-	return(out)
-
-
-def perm_p_matrix(perm_n_per_set,method='enrichment'):
-	n_perms, n_sets = perm_n_per_set.shape
-	out=np.ndarray((n_perms,n_sets),dtype='float64')
-	method_int = 1
-	if method=='enrichment':
-		method_int = -1
-	for i in range(n_sets):
-		out[:,i]=rankdata(method_int*n_per_set[:,i],method='max')/n_perms
-	return(out)
-
-def fdr_from_p_matrix(perm_n_per_set,obs_p,method='enrichment'):
-	p_matrix=perm_p_matrix(perm_n_per_set,method)
-	obs_p_arr = np.asarray(obs_p)
-	n_perm = p_matrix.shape[0]
-	fdr_p = np.empty(len(obs_p),dtype='float64')
-	obs_order = np.argsort(obs_p_arr)
-	p_val, p_counts = np.unique(p_matrix,return_counts=True)
-	current_max_fdr = 0
-	for i, p_idx in enumerate(obs_order):
-		if current_max_fdr==1:
-			fdr_p[p_idx]=1
-		else:
-			obs=np.size(np.where(obs_p_arr<=obs_p_arr[p_idx]))
-			exp=np.sum(p_counts[np.where(p_val <= obs_p_arr[p_idx])])/n_perm
-			i_fdr = exp/obs
-			if i_fdr > current_max_fdr and i_fdr < 1:
-				fdr_p[p_idx] = i_fdr
-				current_max_fdr = i_fdr
-			elif i_fdr < current_max_fdr and i_fdr < 1:
-				fdr_p[p_idx] = current_max_fdr
-			else:
-				fdr_p[p_idx] = 1
-				current_max_fdr = 1
-	return(fdr_p)
-
-
+    check_idxs = []
+    n_perms=np.shape(perms)[0]
+    n_sets=np.shape(sets)[0]
+    for i in range(check_n):
+        j=sample(range(0,n_perms-1),1)[0]
+        k=sample(range(0,n_sets-1),1)[0]
+        check_idxs.append( len(set(perms[j]).intersection(set(sets[k])))==n_per_set[j][k] )
+    return(check_idxs)
