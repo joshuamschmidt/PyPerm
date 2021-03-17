@@ -46,13 +46,28 @@ class InputClass:
         return(out.astype('uint16'))
 
 class FeaturesClass:
-	#constructor
-	def __init__(self,features_file,range_modification):
-		self.features = pd.read_table(
-			features_file, header=0, names=['Chromosome',"Start","End","feature"],
-			dtype={"Chromosome":str,"Start":int,"End":int,"feature":str})
-		self.features['idx'] = np.arange(len(self.features))
-		self.features_user_def = pypermr.gene_definition(self.features,updown=range_modification)
+    #constructor
+    def __init__(self,feature_file,range_modification):
+        self.feature_file = feature_file
+        self.range_modification = range_modification
+        self.features = self._read_feature_file()
+        self.features['idx'] = np.arange(len(self.features))
+        self.features_user_def = self._feature_definition()
+    
+    def _read_feature_file(self):
+        feature_table=pd.read_table(
+            self.feature_file,
+            header=0,
+            names=['Chromosome',"Start","End","feature"],
+            dtype={"Chromosome":str,"Start":int,"End":int,"feature":str}
+            )
+        return(feature_table)
+    
+    def _feature_definition(self):
+        ftable=self.features.copy(deep=True)
+        ftable['Start']=ftable['Start']-self.range_modification
+        ftable['End']=ftable['End']+self.range_modification
+        return(ftable)
 
 class PermutationClass:
 	# constructor
