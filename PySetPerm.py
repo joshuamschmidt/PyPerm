@@ -9,10 +9,62 @@ import inspect
 
 
 #--- classes
+class FeaturesClass:
+    #constructor
+    def __init__(self,feature_file,range_modification):
+        self.feature_file = feature_file
+        self.range_modification = range_modification
+        self.features = self._read_feature_file()
+        self.features['idx'] = np.arange(len(self.features))
+        self.features_user_def = self._feature_definition()
+    
+    def _read_feature_file(self):
+        feature_table=pd.read_table(
+            self.feature_file,
+            header=0,
+            names=['Chromosome',"Start","End","feature"],
+            dtype={"Chromosome":str,"Start":int,"End":int,"feature":str}
+            )
+        return(feature_table)
+    
+    def _feature_definition(self):
+        ftable=self.features.copy(deep=True)
+        ftable['Start']=ftable['Start']-self.range_modification
+        ftable['End']=ftable['End']+self.range_modification
+        return(ftable)
+
+class AnnotationSetClass:
+    # constructor
+    def __init__(self,annotation_file,features,min_size):
+        # initializing instance variable
+        self.annotation_file = annotation_file
+        self.min_size = min_size
+        self.annotation_sets = self._get_annotation_sets(features)
+        self.annotation_array, self.annotation_array_ids = self._annotation_sets_to_array(features)
+    
+    def _get_annotation_sets(self,features):
+        annotation_sets=pd.read_table(
+            self.annotation_file,
+            dtype={"id":str,"feature":str,"name":str}
+            )
+        #annotation_sets =annotation_sets.set_index('feature')
+        return(annotation_sets)
+    
+    def _annotation_sets_to_array(self,features):
+        sets = self.annotation_sets.join(features.set_index('feature'),on='feature').groupby('id')['idx'].apply(list)
+        set_array =  [s for s in sets if len(s) >= self.min_size]
+        set_array = np.sort(listnp_to_padded_nparray(set_array))
+        set_names =  [i for i,s in enumerate(sets) if len(s) >= self.min_size]
+        set_names = sets.index[set_names]
+        return set_array, set_names
+
+
 
 class InputClass:
     def __init__(self,candidate_file,background_file,features,annotation_array):
         # initializing instance variable
+        self.candidate_file = candidate_file
+        self.background_file = background_file
         self.candidates = _read_variant_file(candidate_file)
         self.background = _read_variant_file(background_file)
         self.background_features = _intersect_variants_features(self.background,features)
@@ -45,29 +97,7 @@ class InputClass:
         out[0]=features
         return(out.astype('uint16'))
 
-class FeaturesClass:
-    #constructor
-    def __init__(self,feature_file,range_modification):
-        self.feature_file = feature_file
-        self.range_modification = range_modification
-        self.features = self._read_feature_file()
-        self.features['idx'] = np.arange(len(self.features))
-        self.features_user_def = self._feature_definition()
-    
-    def _read_feature_file(self):
-        feature_table=pd.read_table(
-            self.feature_file,
-            header=0,
-            names=['Chromosome',"Start","End","feature"],
-            dtype={"Chromosome":str,"Start":int,"End":int,"feature":str}
-            )
-        return(feature_table)
-    
-    def _feature_definition(self):
-        ftable=self.features.copy(deep=True)
-        ftable['Start']=ftable['Start']-self.range_modification
-        ftable['End']=ftable['End']+self.range_modification
-        return(ftable)
+
 
 class PermutationClass:
 	# constructor
@@ -75,12 +105,6 @@ class PermutationClass:
 	
 
 
-class AnnotationSetClass:
-    # constructor
-    def __init__(self,annotation_file,features,min_size):
-        # initializing instance variable
-        self.annotation_sets=get_annotation_sets(annotation_file,features)
-        self.annotation_array, self.annotation_array_ids=annotation_sets_to_array(self.annotation_sets,features,min_size=min_size)
 
 	
 
@@ -203,13 +227,6 @@ def make_results_table(cand_features,annotation,filtered_annotation_ids,mean_per
 	out = out.sort_values('emp_p_e')
 	return(out)
 
-def get_annotation_sets(annotation_file,features):
-	annotation_sets=pd.read_table(
-		annotation_file,
-		dtype={"id":str,"feature":str,"name":str}
-		)
-	#annotation_sets =annotation_sets.set_index('feature')
-	return(annotation_sets)
 
 def perm_p_matrix(perm_n_per_set,method='enrichment'):
 	n_perms, n_sets = perm_n_per_set.shape
