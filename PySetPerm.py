@@ -70,6 +70,13 @@ def multicore_resample(n_features,n_reps,n_cores,feature_list):
     results = list(results)
     return(np.concatenate(results))
 
+def multicore_intersect(permutation_array, functionalset_array,n_cores):
+    split_permutation_array = np.array_split(permutation_array, n_cores)
+    with cf.ProcessPoolExecutor(max_workers=n_cores) as executor:
+        results = executor.map(permutation_fset_intersect,zip(split_permutation_array, repeat(functionalset_array)))
+    results = list(results)
+    return(np.concatenate(results))
+
 #--- classes
 class Features:
     #constructor
@@ -170,6 +177,11 @@ class Permutation:
         self.n_cores = n_cores
         self.permutations = multicore_resample(self.n_candidate_features, self.n_permutations, self.n_cores, background_features )
   
+class SetPerPerm:
+	# constructor
+	def __init__(self, permutations, annotation_sets, n_cores):
+		self.setNperPerm = multicore_intersect(permutations, annotation_sets, n_cores)
+
 
 #--- complete functions
 def array_of_resamples(feature_list,n_total,n_reps):
@@ -177,8 +189,6 @@ def array_of_resamples(feature_list,n_total,n_reps):
     for i in range(n_reps):
         out[i] = sample_from_feature_list(feature_list, n_total)
     return(out)
-
-    
 
 def random_check_intersection(n_per_set,perms,sets,check_n):
 	check_idxs = []
