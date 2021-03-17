@@ -11,7 +11,6 @@ import inspect
 #--- classes
 
 class InputClass:
-    # constructor
     def __init__(self,candidate_file,background_file,features,annotation_array):
         # initializing instance variable
         self.candidates = _read_variant_file(candidate_file)
@@ -20,31 +19,31 @@ class InputClass:
         self.background_features = _feature_list(self.background_features)
         self.candidate_features = _intersect_variants_features(self.candidates,features)
         self.candidate_array = _candidate_array(self.candidate_features)
-        self.n_candidate_features = permutation_fset_Mintersect( (self.candidate_array,annotation_array) )
-       
+        self.n_candidate_features = permutation_fset_intersect( (self.candidate_array,annotation_array) )
+      
     def _read_variant_file(input_file):
-		variant_table=pd.read_table(
-			input_file,
-			header=0,
-			names=['Chromosome',"Start","End"],
-			dtype={"Chromosome":str,"Start":int,"End":int}
-			)
-		return(variant_table)
-
-	def _intersect_variants_features(variants, features):
-		vtable=pr.PyRanges(variants).join(pr.PyRanges(features)).df
-		return(vtable)
-
-	def _feature_list(ftable):
-		ftable['id']=ftable.Chromosome.astype(str).str.cat(ftable.Start.astype(str), sep='_')
-		ftable=eastern_bg_genes.groupby('id')['idx'].apply(list).tolist()
-		return(ftable)
-
-	def _candidate_array(candidate_feature_mapped):
-		features=np.asarray(np.unique(candidate_feature_mapped['idx']))
-		out=np.ndarray((1,np.size(features)),dtype='uint16')
-		out[0]=features
-		return(out.astype('uint16'))
+        variant_table=pd.read_table(
+            input_file,
+            header=0,
+            names=['Chromosome',"Start","End"],
+            dtype={"Chromosome":str,"Start":int,"End":int}
+            )
+        return(variant_table)
+    
+    def _intersect_variants_features(variants, features):
+        vtable=pr.PyRanges(variants).join(pr.PyRanges(features)).df
+        return(vtable)
+    
+    def _feature_list(ftable):
+        ftable['id']=ftable.Chromosome.astype(str).str.cat(ftable.Start.astype(str), sep='_')
+        ftable=eastern_bg_genes.groupby('id')['idx'].apply(list).tolist()
+        return(ftable)
+    
+    def _candidate_array(candidate_feature_mapped):
+        features=np.asarray(np.unique(candidate_feature_mapped['idx']))
+        out=np.ndarray((1,np.size(features)),dtype='uint16')
+        out[0]=features
+        return(out.astype('uint16'))
 
 class FeaturesClass:
 	#constructor
@@ -71,6 +70,27 @@ class AnnotationSetClass:
 	
 
 #--- complete functions
+    
+def permutation_fset_intersect(args):
+    start = time.perf_counter()
+    permutation_array = args[0]
+    function_array = args[1]
+    max_z = max(permutation_array.max(), function_array.max()) + 1
+
+    def csr_sparse(A, z):
+    	m, n = A.shape
+    	indptr = np.arange(0, m*n+1, n)
+    	data = np.ones(m*n, dtype=np.uint16)
+    	return csr_matrix((data, A.ravel(), indptr), shape=(m,z))
+
+    intersection = csr_sparse(permutation_array,max_z ) * csr_sparse(function_array, max_z).T
+    intersection = intersection.todense()
+    finish = time.perf_counter()
+    #print(f'This process took {round(finish-start, 2)} second(s)')
+    return np.squeeze(np.asarray(intersection))
+
+
+
 def sample_from_feature_list(feature_list,n_total):
     out = pd.unique([item for sublist in sample(feature_list,n_total) for item in sublist])
     while len(out) < n_total:
@@ -106,11 +126,6 @@ def multicore_resample(feature_list,n_features,n_reps,n_cores):
 		results = executor.map(array_of_resamples_tup,zip(repeat(feature_list),repeat(n_features),n_per_core))
 	results = list(results)
 	return(np.concatenate(results))
-
-def feature_list(ftable):
-	ftable['id']=ftable.Chromosome.astype(str).str.cat(ftable.Start.astype(str), sep='_')
-	ftable=eastern_bg_genes.groupby('id')['idx'].apply(list).tolist()
-	return(ftable)
 
 def listnp_to_padded_nparray(listnp):
     max_width=np.max([np.size(l) for l in listnp])
@@ -216,18 +231,4 @@ def fdr_from_p_matrix(perm_n_per_set,obs_p,method='enrichment'):
 				current_max_fdr = 1
 	return(fdr_p)
 
-def intersect_variants_features(variants, features):
-	vtable=pr.PyRanges(variants).join(pr.PyRanges(features)).df
-	return(vtable)
 
-def read_variant_file(file):
-	variant_table=pd.read_table(
-		file,
-		header=0,
-		names=['Chromosome',"Start","End"],
-		dtype={"Chromosome":str,"Start":int,"End":int})
-	return(variant_table)
-
-
-
-#
