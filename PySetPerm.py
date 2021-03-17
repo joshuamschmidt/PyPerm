@@ -4,8 +4,6 @@ import numpy as np
 import pickle
 from itertools import repeat
 import random
-import multiprocessing
-from multiprocessing import Pool
 from scipy.stats import rankdata
 import inspect
 
