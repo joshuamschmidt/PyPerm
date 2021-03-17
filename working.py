@@ -1,4 +1,4 @@
-import PySetPerm as psp
+import pysetperm as psp
 import pandas as pd
 import pyranges as pr
 import numpy as np
