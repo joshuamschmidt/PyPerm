@@ -52,4 +52,3 @@ features = FeaturesClass(feature_file, 2000)
 annotation_file ='/Users/joshuaschmidt/Projects/pypermr/go.txt'
 annotation_set = AnnotationSetClass(annotation_file,genes_2kb,5)
 
-
