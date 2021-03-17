@@ -76,7 +76,6 @@ def multicore_intersect(permutation_array, functionalset_array,n_cores):
     return(np.concatenate(results))
 
 
-
 def calculate_p_values(c_set_n, p_set_n):
     p_e = []
     p_d = []
@@ -90,25 +89,24 @@ def calculate_p_values(c_set_n, p_set_n):
             p_d.append((np.size(np.where(p_set_n[:,i]<=c_set_n[i]))+1)/(n_perm+1))
     return((p_e,p_d))
 
-def make_results_table(cand_features,annotation,filtered_annotation_ids,p_lists,n_per_set):
+def make_results_table(cand_features,annotations,set_per_perm ):
     cand_set=set(cand_features['feature'].values)
-    cand_genes_in_sets = annotation.groupby('id')['feature'].apply(lambda x: np.unique(list(set(x).intersection(cand_set))))
-    cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(filtered_annotation_ids)])
+    cand_genes_in_sets = annotations.annotation_sets.groupby('id')['feature'].apply(lambda x: np.unique(list(set(x).intersection(cand_set))))
+    cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(annotations.annotation_array_ids)])
     cand_genes_in_sets = cand_genes_in_sets.reset_index(level=['id'])
     cand_genes_in_sets.columns = ['id','candidate_features']
-    n_genes_in_sets = pd.DataFrame(annotation.groupby(['id','name'])['feature'].nunique()[filtered_annotation_ids])
+    n_genes_in_sets = pd.DataFrame(annotations.annotation_sets.groupby(['id','name'])['feature'].nunique()[annotations.annotation_array_ids])
     n_genes_in_sets = n_genes_in_sets.reset_index(level=['id', 'name'])
     out=n_genes_in_sets.join(cand_genes_in_sets.set_index('id'),on='id')
     out['n_candidates_in_set'] = [len(l) for l in out['candidate_features']]
-    mean_per_set = np.array(np.mean(n_per_set,axis=0))
-    out['mean_permutation_n'] = mean_per_set
+    out['mean_permutation_n'] = set_per_perm.mean_per_set
     out_col_names = out.columns.values
     out_col_names[2] = 'feature_set_n'
     out.columns = out_col_names
-    out['emp_p_e'] = p_lists[0]
-    out['emp_p_d'] = p_lists[1]
-    out['fdr_e'] = fdr_from_p_matrix(n_per_set,out['emp_p_e'],method='enrichment')
-    out['fdr_d'] = fdr_from_p_matrix(n_per_set,out['emp_p_d'],method='depletion')
+    out['emp_p_e'] = set_per_perm.p_enrichment
+    out['emp_p_d'] = set_per_perm.p_depletion
+    out['fdr_e'] = fdr_from_p_matrix(set_per_perm.setNperPerm,out['emp_p_e'],method='enrichment')
+    out['fdr_d'] = fdr_from_p_matrix(set_per_perm.setNperPerm,out['emp_p_d'],method='depletion')
     out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
     out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
     out = out.sort_values('emp_p_e')
@@ -264,7 +262,7 @@ def perm_p_matrix(perm_n_per_set,method='enrichment'):
     if method=='enrichment':
         method_int = -1
     for i in range(n_sets):
-        out[:,i]=rankdata(method_int*n_per_set[:,i],method='max')/n_perms
+        out[:,i]=rankdata(method_int*perm_n_per_set[:,i],method='max')/n_perms
     return(out)
 
 
