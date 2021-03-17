@@ -10,7 +10,7 @@ import inspect
 
 
 #--- classes
-class FeaturesClass:
+class Features:
     #constructor
     def __init__(self,feature_file,range_modification):
         self.feature_file = feature_file
@@ -35,10 +35,8 @@ class FeaturesClass:
             return(ftable)
         
         self.features_user_def = _feature_definition(self.features, self.range_modification)
-    
-    
 
-class AnnotationSetClass:
+class AnnotationSet:
     # constructor
     def __init__(self,annotation_file,features,min_size):
         # initializing instance variable
@@ -62,18 +60,8 @@ class AnnotationSetClass:
     
         self.annotation_sets = _get_annotation_sets(self.annotation_file, features)
         self.annotation_array, self.annotation_array_ids = _annotation_sets_to_array(self.annotation_sets, features, self.min_size)
-    
-    
-    
-    def _annotation_sets_to_array(self,features):
-        sets = self.annotation_sets.join(features.set_index('feature'),on='feature').groupby('id')['idx'].apply(list)
-        set_array =  [s for s in sets if len(s) >= self.min_size]
-        set_array = np.sort(listnp_to_padded_nparray(set_array))
-        set_names =  [i for i,s in enumerate(sets) if len(s) >= self.min_size]
-        set_names = sets.index[set_names]
-        return set_array, set_names
 
-class InputClass:
+class Input:
     # constructor
     def __init__(self,candidate_file,background_file,features,annotation_array):
         # initializing instance variable
@@ -113,7 +101,7 @@ class InputClass:
         self.n_candidates = np.size(self.candidate_array)
         self.n_candidate_per_function = permutation_fset_intersect( (self.candidate_array,annotation_array) )
 
-class PermutationClass:
+class Permutation:
 	# constructor
 	def __init__(self,background_features,n_candidate_features,n_permutations,n_cores)
 	
