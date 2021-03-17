@@ -5,6 +5,7 @@ import pickle
 from itertools import repeat
 import random
 from scipy.stats import rankdata
+from scipy.sparse import csr_matrix
 import inspect
 
 
@@ -58,46 +59,44 @@ class AnnotationSetClass:
         set_names = sets.index[set_names]
         return set_array, set_names
 
-
-
 class InputClass:
     def __init__(self,candidate_file,background_file,features,annotation_array):
         # initializing instance variable
         self.candidate_file = candidate_file
         self.background_file = background_file
-        self.candidates = _read_variant_file(candidate_file)
-        self.background = _read_variant_file(background_file)
+      
+        def _read_variant_file(input_file):
+            variant_table=pd.read_table(
+                input_file,
+                header=0,
+                names=['Chromosome',"Start","End"],
+                dtype={"Chromosome":str,"Start":int,"End":int}
+                )
+            return(variant_table)
+        
+        def _intersect_variants_features(variants, features):
+            vtable=pr.PyRanges(variants).join(pr.PyRanges(features)).df
+            return(vtable)
+        
+        def _feature_list(ftable):
+            ftable['id']=ftable.Chromosome.astype(str).str.cat(ftable.Start.astype(str), sep='_')
+            ftable=ftable.groupby('id')['idx'].apply(list).tolist()
+            return(ftable)
+        
+        def _candidate_array(candidate_feature_mapped):
+            features=np.asarray(np.unique(candidate_feature_mapped['idx']))
+            out=np.ndarray((1,np.size(features)),dtype='uint16')
+            out[0]=features
+            return(out.astype('uint16'))
+    
+        self.candidates = _read_variant_file(self.candidate_file)
+        self.background = _read_variant_file(self.background_file)
         self.background_features = _intersect_variants_features(self.background,features)
         self.background_features = _feature_list(self.background_features)
         self.candidate_features = _intersect_variants_features(self.candidates,features)
         self.candidate_array = _candidate_array(self.candidate_features)
-        self.n_candidate_features = permutation_fset_intersect( (self.candidate_array,annotation_array) )
-      
-    def _read_variant_file(input_file):
-        variant_table=pd.read_table(
-            input_file,
-            header=0,
-            names=['Chromosome',"Start","End"],
-            dtype={"Chromosome":str,"Start":int,"End":int}
-            )
-        return(variant_table)
-    
-    def _intersect_variants_features(variants, features):
-        vtable=pr.PyRanges(variants).join(pr.PyRanges(features)).df
-        return(vtable)
-    
-    def _feature_list(ftable):
-        ftable['id']=ftable.Chromosome.astype(str).str.cat(ftable.Start.astype(str), sep='_')
-        ftable=eastern_bg_genes.groupby('id')['idx'].apply(list).tolist()
-        return(ftable)
-    
-    def _candidate_array(candidate_feature_mapped):
-        features=np.asarray(np.unique(candidate_feature_mapped['idx']))
-        out=np.ndarray((1,np.size(features)),dtype='uint16')
-        out[0]=features
-        return(out.astype('uint16'))
-
-
+        self.n_candidates = np.size(self.candidate_array)
+        self.n_candidate_per_function = permutation_fset_intersect( (self.candidate_array,annotation_array) )
 
 class PermutationClass:
 	# constructor
@@ -111,21 +110,18 @@ class PermutationClass:
 #--- complete functions
     
 def permutation_fset_intersect(args):
-    start = time.perf_counter()
     permutation_array = args[0]
     function_array = args[1]
     max_z = max(permutation_array.max(), function_array.max()) + 1
-
+    
     def csr_sparse(A, z):
-    	m, n = A.shape
-    	indptr = np.arange(0, m*n+1, n)
-    	data = np.ones(m*n, dtype=np.uint16)
-    	return csr_matrix((data, A.ravel(), indptr), shape=(m,z))
-
+        m, n = A.shape
+        indptr = np.arange(0, m*n+1, n)
+        data = np.ones(m*n, dtype=np.uint16)
+        return csr_matrix((data, A.ravel(), indptr), shape=(m,z))
+    
     intersection = csr_sparse(permutation_array,max_z ) * csr_sparse(function_array, max_z).T
     intersection = intersection.todense()
-    finish = time.perf_counter()
-    #print(f'This process took {round(finish-start, 2)} second(s)')
     return np.squeeze(np.asarray(intersection))
 
 
