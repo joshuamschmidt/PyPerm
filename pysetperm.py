@@ -272,10 +272,9 @@ class Permutation:
 class SetPerPerm:
     # constructor
     def __init__(self, permutations, annotation_sets, n_cores, n_candidates_per_set):
-        self.setNperPerm = multicore_intersect(permutations, annotation_sets, n_cores)
-        self.mean_per_set = np.array(np.mean(self.setNperPerm, axis=0))
-        self.p_enrichment, self.p_depletion = calculate_p_values(n_candidates_per_set, self.setNperPerm)
-
+        self.set_n_per_perm = multicore_intersect(permutations, annotation_sets, n_cores)
+        self.mean_per_set = np.array(np.mean(self.set_n_per_perm, axis=0))
+        self.p_enrichment, self.p_depletion = calculate_p_values(n_candidates_per_set, self.set_n_per_perm)
 
 # --- redundant and/or not used anymore
 
