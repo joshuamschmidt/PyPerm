@@ -101,7 +101,7 @@ def calculate_p_values(c_set_n, p_set_n):
     return p_e, p_d
 
 
-def make_results_table(cand_features, annotations, set_per_perm):
+def make_results_table(input_obj, annotation_obj, permutation_obj):
     cand_set = set(cand_features['feature'].values)
     cand_genes_in_sets = annotations.annotation_sets.groupby('id')['feature'].apply(
         lambda x: np.unique(list(set(x).intersection(cand_set))))
@@ -216,6 +216,9 @@ class AnnotationSet:
         self.annotation_sets = _get_annotation_sets(self.annotation_file)
         self.annotation_array, self.annotation_array_ids = _annotation_sets_to_array(self.annotation_sets, features,
                                                                                      self.min_size)
+        self.n_per_set = np.asarray([np.size(np.where(a_set != 0))
+                                     for a_set
+                                     in self.annotation_array], dtype='uint16')
 
 
 class Input:

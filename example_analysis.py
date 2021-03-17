@@ -1,5 +1,6 @@
 import pysetperm as psp
-
+import numpy as np
+import pandas as pd
 # used for all sub analyses
 features = psp.Features('data/genes.txt', 2000)
 annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
