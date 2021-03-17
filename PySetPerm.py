@@ -40,14 +40,14 @@ class AnnotationSetClass:
         # initializing instance variable
         self.annotation_file = annotation_file
         self.min_size = min_size
-
+    
         def _get_annotation_sets(annotation_file,features):
             annotation_sets=pd.read_table(
                 annotation_file,
                 dtype={"id":str,"feature":str,"name":str}
                 )
             return(annotation_sets)
-
+    
         def _annotation_sets_to_array(annotation_sets,features,min_size):
             sets = annotation_sets.join(features.set_index('feature'),on='feature').groupby('id')['idx'].apply(list)
             set_array =  [s for s in sets if len(s) >= min_size]
@@ -55,7 +55,7 @@ class AnnotationSetClass:
             set_names =  [i for i,s in enumerate(sets) if len(s) >= min_size]
             set_names = sets.index[set_names]
             return set_array, set_names
-
+    
         self.annotation_sets = _get_annotation_sets(self.annotation_file, features)
         self.annotation_array, self.annotation_array_ids = _annotation_sets_to_array(self.annotation_sets, features, self.min_size)
     
