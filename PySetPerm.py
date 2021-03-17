@@ -40,16 +40,26 @@ class AnnotationSetClass:
         # initializing instance variable
         self.annotation_file = annotation_file
         self.min_size = min_size
-        self.annotation_sets = self._get_annotation_sets(features)
-        self.annotation_array, self.annotation_array_ids = self._annotation_sets_to_array(features)
+
+        def _get_annotation_sets(annotation_file,features):
+            annotation_sets=pd.read_table(
+                annotation_file,
+                dtype={"id":str,"feature":str,"name":str}
+                )
+            return(annotation_sets)
+
+        def _annotation_sets_to_array(annotation_sets,features,min_size):
+            sets = annotation_sets.join(features.set_index('feature'),on='feature').groupby('id')['idx'].apply(list)
+            set_array =  [s for s in sets if len(s) >= min_size]
+            set_array = np.sort(listnp_to_padded_nparray(set_array))
+            set_names =  [i for i,s in enumerate(sets) if len(s) >= min_size]
+            set_names = sets.index[set_names]
+            return set_array, set_names
+
+        self.annotation_sets = _get_annotation_sets(self.annotation_file, features)
+        self.annotation_array, self.annotation_array_ids = _annotation_sets_to_array(self.annotation_sets, features, self.min_size)
     
-    def _get_annotation_sets(self,features):
-        annotation_sets=pd.read_table(
-            self.annotation_file,
-            dtype={"id":str,"feature":str,"name":str}
-            )
-        #annotation_sets =annotation_sets.set_index('feature')
-        return(annotation_sets)
+    
     
     def _annotation_sets_to_array(self,features):
         sets = self.annotation_sets.join(features.set_index('feature'),on='feature').groupby('id')['idx'].apply(list)
@@ -60,6 +70,7 @@ class AnnotationSetClass:
         return set_array, set_names
 
 class InputClass:
+    # constructor
     def __init__(self,candidate_file,background_file,features,annotation_array):
         # initializing instance variable
         self.candidate_file = candidate_file
