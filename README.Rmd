@@ -101,3 +101,7 @@ ci_results = psp.make_results_table(ci_input, annotations, ci_per_set)
 eci_results = psp.make_results_table(eci_input, annotations, eci_per_set)
 ```
 
+```{r}
+py$eci_results
+```
+
