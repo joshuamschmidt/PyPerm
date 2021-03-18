@@ -265,7 +265,7 @@ class Input:
         self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, annotation.annotation_array))
 
     @classmethod
-    def add_objects(cls, a_obj, b_obj):
+    def join_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
         obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
         obj.background_file = [a_obj.background_file, b_obj.background_file]
@@ -283,6 +283,7 @@ class Input:
         obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
         obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
         return obj
+
 
 class Permutation:
     # constructor
@@ -303,7 +304,7 @@ class SetPerPerm:
         self.n_candidate_per_function = input_obj.n_candidate_per_function
 
     @classmethod
-    def add_objects(cls, a_obj, b_obj):
+    def join_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
         obj.set_n_per_perm = a_obj.set_n_per_perm + b_obj.set_n_per_perm
         obj.mean_per_set = a_obj.mean_per_set + b_obj.mean_per_set
