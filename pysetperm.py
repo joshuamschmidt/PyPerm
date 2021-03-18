@@ -101,13 +101,15 @@ def calculate_p_values(c_set_n, p_set_n):
     return p_e, p_d
 
 
-def make_results_table(input_obj, annotation_obj, permutation_obj):
-
-
-    out['emp_p_e'] = set_per_perm.p_enrichment
-    out['emp_p_d'] = set_per_perm.p_depletion
-    out['fdr_e'] = fdr_from_p_matrix(set_per_perm.setNperPerm, out['emp_p_e'], method='enrichment')
-    out['fdr_d'] = fdr_from_p_matrix(set_per_perm.setNperPerm, out['emp_p_d'], method='depletion')
+def make_results_table(input_obj, annotation_obj, permutation_set_obj):
+    out = annotation_obj.annotation_sets.groupby('id', as_index=False).agg({'name': pd.Series.unique})
+    out = out[out['id'].isin(annotation_obj.annotation_array_ids)]
+    out = out.join(input_obj.candidate_features_per_set.set_index('id'), on='id')
+    out['mean_n_resample'] = permutation_set_obj.mean_per_set
+    out['emp_p_e'] = permutation_set_obj.p_enrichment
+    out['emp_p_d'] = permutation_set_obj.p_depletion
+    out['fdr_e'] = fdr_from_p_matrix(permutation_set_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
+    out['fdr_d'] = fdr_from_p_matrix(permutation_set_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
     out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
     out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
     out = out.sort_values('emp_p_e')
