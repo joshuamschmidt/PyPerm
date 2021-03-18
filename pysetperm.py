@@ -269,8 +269,10 @@ class Input:
         obj = cls.__new__(cls)
         obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
         obj.background_file = [a_obj.background_file, b_obj.background_file]
-        obj.candidates = pd.concat([a_obj.candidates, b_obj.candidates], keys=["A", "B"])
-        obj.background = pd.concat([a_obj.background, b_obj.background], keys=["A", "B"])
+        #obj.candidates = pd.concat([a_obj.candidates, b_obj.candidates], keys=["A", "B"])
+        #obj.background = pd.concat([a_obj.background, b_obj.background], keys=["A", "B"])
+        obj.candidates = None
+        obj.background = None
         obj.background_features = None
         obj.candidate_features = pd.concat([a_obj.candidate_features, b_obj.candidate_features], keys=["A", "B"])
         obj.candidate_array = [a_obj.candidate_array, b_obj.candidate_array]
