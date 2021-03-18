@@ -11,12 +11,6 @@ from random import sample
 
 
 # --- global functions
-
-def per_set_candidate_genes(cand_array, annotation_array, features):
-    [np.intersect1d(arr,annotation_array) for arr in annotation_array]
-    intersected = np.intersect1d(arr_1d, arr_2d_view)
-    return intersected.view(arr1.dtype).reshape(-1, arr1.shape[1])
-
 def permutation_fset_intersect(args):
     permutation_array = args[0]
     function_array = args[1]
@@ -243,8 +237,11 @@ class Input:
             )
             return variant_table
 
-        def _intersect_variants_features(variants, features_table):
-            vtable = pr.PyRanges(variants).join(pr.PyRanges(features_table)).df
+        def _intersect_variants_features(variants, feature_obj):
+            try:
+                vtable = pr.PyRanges(variants).join(pr.PyRanges(feature_obj.features_user_def)).df
+            except AttributeError:
+                vtable = pr.PyRanges(variants).join(pr.PyRanges(feature_obj.features)).df
             return vtable
 
         def _feature_list(ftable):
@@ -258,11 +255,11 @@ class Input:
             out[0] = feature_array
             return out.astype('uint16')
 
-        def _per_set_candidate_genes(self, annotation_sets):
+        def _per_set_candidate_genes(self, annotation):
             cand_set = set(self.candidate_features['feature'].values)
-            cand_genes_in_sets = annotations.annotation_sets.groupby('id')['feature'].apply(
+            cand_genes_in_sets = annotation.annotation_sets.groupby('id')['feature'].apply(
                 lambda x: np.unique(list(set(x).intersection(cand_set))))
-            cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(annotations.annotation_array_ids)])
+            cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(annotation.annotation_array_ids)])
             cand_genes_in_sets = cand_genes_in_sets.reset_index(level=['id'])
             cand_genes_in_sets.columns = ['id', 'candidate_features']
             cand_genes_in_sets['n_candidates_in_set'] = cand_genes_in_sets['candidate_features'].apply(lambda x: len(x))
@@ -274,7 +271,7 @@ class Input:
         self.background_features = _feature_list(self.background_features)
         self.candidate_features = _intersect_variants_features(self.candidates, features)
         self.candidate_array = _candidate_array(self)
-        self.candidate_features_per_set = _per_set_candidate_genes(self, annotation.annotation_sets)
+        self.candidate_features_per_set = _per_set_candidate_genes(self, annotation)
         self.n_candidates = np.size(self.candidate_array)
         self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, annotation.annotation_array))
 
