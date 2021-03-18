@@ -267,7 +267,18 @@ class Input:
     @classmethod
     def add_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
-        
+        obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
+        obj.background_file = [a_obj.background_file, b_obj.background_file]
+        obj.candidates = _read_variant_file(self.candidate_file)
+        obj.background = _read_variant_file(self.background_file)
+        obj.background_features = _intersect_variants_features(self.background, features)
+        obj.background_features = _feature_list(self.background_features)
+        obj.candidate_features = _intersect_variants_features(self.candidates, features)
+        obj.candidate_array = _candidate_array(self)
+        obj.candidate_features_per_set = _per_set_candidate_genes(self, annotation)
+        obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
+        obj.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, annotation.annotation_array))
+
         return obj
 
 class Permutation:
