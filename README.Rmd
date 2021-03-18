@@ -15,11 +15,11 @@ While achieving similar results as GOWINDA, namely feature (gene) lengh bias cor
 
 First, PySetPerm enables testing of depletion in addition to enrichment.  
 
-Second, PySetPerm enables testing of the enrichment/depletion of combined candidate sets. The idea is best illustrated by an hypothetical example.  
+Second, PySetPerm enables testing of the enrichment/depletion of combined candidate sets (joint distribution). The idea is best illustrated by an hypothetical example.  
 
-Suppose a method to detect loci under positive selection is used in popA and popB, identifying several candidate loci in each population. We could test if candidates in either of the populations are enriched for particular functions. This would be a common GO test for popA and popB individually. Perhaps a more interesting question, biologically, is to ask if the union of popA and popB candidate loci is enriched for a particular function - this could suggest that a common pathway has been under selection. 
+Suppose a method to detect loci under positive selection is used in popA and popB, identifying several candidate loci in each population. We could test if candidates in either of the populations are enriched for particular functions. This would be a common GO test for popA and popB individually. Perhaps a more interesting question, biologically, is to ask if the joint distribution of popA and popB candidate loci is enriched for a particular function - this could suggest that a common pathway has been under selection. 
 
-The aim for PySetPerm is to develop a simple, extensible framework for developing these tests.  At the moment simple testing of candidate set unions is implemented. Future plans include equivalent intersect tests, block permutations and more!  
+The aim for PySetPerm is to develop a simple, extensible framework for developing these tests.  At the moment simple testing of joint candidate set distributions is implemented. Future plans include equivalent explicit union and intersect tests, varied block permutation options and more!  
 
 ## A worked example
 ```{r setup reticulate, echo=F, results="hide"}
@@ -29,7 +29,7 @@ library(reticulate)
 library(ggplot2)
 ```
 
-```{python shared by all tests, eval=T, messages=FALSE, result='hide'}
+```{python shared by all tests, eval=F, messages=FALSE, result='hide'}
 import pysetperm as psp
 features = psp.Features('data/genes.txt', 2000)
 annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
@@ -37,7 +37,7 @@ n_perms = 100000
 cores = 10
 ```
 
-```{python on screen inputs, eval=T}
+```{python on screen inputs, eval=F}
 e_input = psp.Input('data/eastern_candidates.txt',
                     'data/eastern_background.txt.gz',
                     features,
@@ -56,7 +56,7 @@ i_input = psp.Input('data/internal_candidates.txt',
 ```
 
 
-```{python on screen permutations, eval=T}
+```{python on screen permutations, eval=F}
 e_permutations = psp.Permutation(e_input, n_perms, cores)
 c_permutations = psp.Permutation(c_input, n_perms, cores)
 i_permutations = psp.Permutation(i_input, n_perms, cores)
@@ -75,7 +75,7 @@ i_per_set = psp.SetPerPerm(i_permutations,
                            cores)
 ```
 
-.add_objects() functions for both Input and SetPerPerm objects enable fast creation of union sets.  
+.join_objects() functions for both Input and SetPerPerm objects enable fast creation of union sets.  
 
 ```{python on screen combine, eval=F}
 # combine sims
@@ -101,7 +101,8 @@ ci_results = psp.make_results_table(ci_input, annotations, ci_per_set)
 eci_results = psp.make_results_table(eci_input, annotations, eci_per_set)
 ```
 
-```{r}
-py$eci_results
+```{r, eval=F}
+library(data.table)
+as.data.table(py$eci_results)
 ```
 

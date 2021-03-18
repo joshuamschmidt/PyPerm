@@ -1,9 +1,8 @@
 PySetPerm
 ================
 Joshua Schmidt
-18/03/2021
 
--   [Introduction.](#introduction.)
+-   [Introduction.](#introduction)
 -   [A worked example](#a-worked-example)
 
 ## Introduction.
@@ -18,22 +17,23 @@ bias correction, PySetPerm adds additional functionality.
 First, PySetPerm enables testing of depletion in addition to enrichment.
 
 Second, PySetPerm enables testing of the enrichment/depletion of
-combined candidate sets. The idea is best illustrated by an hypothetical
-example.
+combined candidate sets (joint distribution). The idea is best
+illustrated by an hypothetical example.
 
 Suppose a method to detect loci under positive selection is used in popA
 and popB, identifying several candidate loci in each population. We
 could test if candidates in either of the populations are enriched for
 particular functions. This would be a common GO test for popA and popB
 individually. Perhaps a more interesting question, biologically, is to
-ask if the union of popA and popB candidate loci is enriched for a
-particular function - this could suggest that a common pathway has been
-under selection.
+ask if the joint distribution of popA and popB candidate loci is
+enriched for a particular function - this could suggest that a common
+pathway has been under selection.
 
 The aim for PySetPerm is to develop a simple, extensible framework for
-developing these tests. At the moment simple testing of candidate set
-unions is implemented. Future plans include equivalent intersect tests,
-block permutations and more!
+developing these tests. At the moment simple testing of joint candidate
+set distributions is implemented. Future plans include equivalent
+explicit union and intersect tests, varied block permutation options and
+more!
 
 ## A worked example
 
@@ -81,7 +81,7 @@ i_per_set = psp.SetPerPerm(i_permutations,
                            cores)
 ```
 
-.add\_objects() functions for both Input and SetPerPerm objects enable
+.join\_objects() functions for both Input and SetPerPerm objects enable
 fast creation of union sets.
 
 ``` python
@@ -105,4 +105,9 @@ ec_results = psp.make_results_table(ec_input, annotations, ec_per_set)
 ei_results = psp.make_results_table(ei_input, annotations, ei_per_set)
 ci_results = psp.make_results_table(ci_input, annotations, ci_per_set)
 eci_results = psp.make_results_table(eci_input, annotations, eci_per_set)
+```
+
+``` r
+library(data.table)
+as.data.table(py$eci_results)
 ```
