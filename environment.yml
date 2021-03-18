@@ -1,4 +1,4 @@
-name: pypermr
+name: PySetPerm
 channels:
   - bioconda
   - anaconda
@@ -66,4 +66,3 @@ dependencies:
   - xz=5.2.5=haf1e3a3_1
   - zeromq=4.3.4=h1c7c35f_0
   - zlib=1.2.11=h7795811_1010
-prefix: /opt/miniconda3/envs/pypermr

@@ -9,7 +9,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, results = "hide", error=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ## Introduction.  
@@ -27,31 +27,23 @@ Suppose a method to detect loci under positive selection is used in popA and pop
 The aim for PySetPerm is to develop a simple, extensible framework for developing these tests.  At the moment simple testing of candidate set unions is implemented. Future plans include equivalent intersect tests, block permutations and more!  
 
 ## A worked example
-```{r libraries, echo=F,results=F}
+```{r setup reticulate, echo=F, results="hide"}
+Sys.setenv(PATH = "$HOME/miniconda3/bin:$PATH")
+reticulate::use_condaenv('/Users/joshuaschmidt/pypermr')
 library(reticulate)
-use_condaenv('pyermr')
-Sys.setenv(RETICULATE_PYTHON = "/Users/joshuaschmidt/pypermr/bin/python")
-library(data.table)
-
 ```
 
-```{python , eval=F, echo=F}
-psp <- import("pysetperm")
-features = psp.Features('data/genes.txt', 2000)
-annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
+```{python shared by all tests, eval=T}
+import os
+os.getcwd()
+#import pysetperm as psp
+#features = psp.Features('data/genes.txt', 2000)
+#annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
 n_perms = 100000
 cores = 10
 ```
 
-```{python on screen setup, eval=F}
-import pysetperm as psp
-features = psp.Features('data/genes.txt', 2000)
-annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
-n_perms = 100000
-cores = 10
-```
-
-```{python on screen inputs, eval=F}
+```{python on screen inputs, eval=T}
 e_input = psp.Input('data/eastern_candidates.txt',
                     'data/eastern_background.txt.gz',
                     features,
@@ -70,7 +62,7 @@ i_input = psp.Input('data/internal_candidates.txt',
 ```
 
 
-```{python on screen permutations, eval=F}
+```{python on screen permutations, eval=T}
 e_permutations = psp.Permutation(e_input, n_perms, cores)
 c_permutations = psp.Permutation(c_input, n_perms, cores)
 i_permutations = psp.Permutation(i_input, n_perms, cores)
