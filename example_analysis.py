@@ -13,7 +13,7 @@ e_input = psp.Input('data/eastern_candidates.txt',
                     annotations)
 
 # permutations
-e_permutations = psp.Permutation(e_input.background_features, e_input.n_candidates, n_perms, cores)
+e_permutations = psp.Permutation(e_input, n_perms, cores)
 
 e_per_set = psp.SetPerPerm(e_permutations.permutations,
                            annotations.annotation_array,

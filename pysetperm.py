@@ -279,7 +279,7 @@ class Input:
 class Permutation:
     # constructor
     def __init__(self, input_obj, n_permutations, n_cores):
-        self.permutations = multicore_resample(input_obj.n_candidate_features,
+        self.permutations = multicore_resample(input_obj.n_candidates,
                                                n_permutations,
                                                n_cores,
                                                input_obj.background_features)
@@ -288,10 +288,10 @@ class Permutation:
 
 class SetPerPerm:
     # constructor
-    def __init__(self, permutations, annotation_sets, n_cores, n_candidates_per_set):
-        self.set_n_per_perm = multicore_intersect(permutations, annotation_sets, n_cores)
+    def __init__(self, permutation_obj, annotation_obj, input_obj, n_cores):
+        self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, annotation_obj.annotation_array, n_cores)
         self.mean_per_set = np.array(np.mean(self.set_n_per_perm, axis=0))
-        self.p_enrichment, self.p_depletion = calculate_p_values(n_candidates_per_set, self.set_n_per_perm)
+        self.p_enrichment, self.p_depletion = calculate_p_values(input_obj.n_candidate_per_function, self.set_n_per_perm)
 
 # --- redundant and/or not used anymore
 
