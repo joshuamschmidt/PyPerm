@@ -79,13 +79,13 @@ i_per_set = psp.SetPerPerm(i_permutations,
 
 ```{python on screen combine, eval=F}
 # combine sims
-ec_input = psp.Input.add_objects(e_input, c_input)
+ec_input = psp.Input.join_objects(e_input, c_input)
 ec_per_set = psp.SetPerPerm.add_objects(e_per_set, c_per_set)
-ei_input = psp.Input.add_objects(e_input, i_input)
+ei_input = psp.Input.join_objects(e_input, i_input)
 ei_per_set = psp.SetPerPerm.add_objects(e_per_set, i_per_set)
-ci_input = psp.Input.add_objects(c_input, i_input)
+ci_input = psp.Input.join_objects(c_input, i_input)
 ci_per_set = psp.SetPerPerm.add_objects(c_per_set, i_per_set)
-eci_input = psp.Input.add_objects(ec_input, i_input)
+eci_input = psp.Input.join_objects(ec_input, i_input)
 eci_per_set = psp.SetPerPerm.add_objects(ec_per_set, i_per_set)
 
 ```
