@@ -131,7 +131,7 @@ def fdr_from_p_matrix(perm_n_per_set, obs_p, method='enrichment'):
             obs = np.size(np.where(obs_p_arr <= obs_p_arr[p_idx]))
             exp = np.sum(p_counts[np.where(p_val <= obs_p_arr[p_idx])]) / n_perm
             i_fdr = exp / obs
-            if current_max_fdr < i_fdr < 1:
+            if current_max_fdr <= i_fdr < 1:
                 fdr_p[p_idx] = i_fdr
                 current_max_fdr = i_fdr
             elif current_max_fdr > i_fdr and i_fdr < 1:
