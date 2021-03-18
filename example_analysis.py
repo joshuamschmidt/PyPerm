@@ -15,7 +15,11 @@ e_input = psp.Input('data/eastern_candidates.txt',
 # permutations
 e_permutations = psp.Permutation(e_input, n_perms, cores)
 
-e_per_set = psp.SetPerPerm(e_permutations.permutations,
-                           annotations.annotation_array,
-                           cores,
-                           e_input.n_candidate_per_function)
+# distributions across permutations
+e_per_set = psp.SetPerPerm(e_permutations,
+                           annotations,
+                           e_input,
+                           cores)
+
+# results tables
+

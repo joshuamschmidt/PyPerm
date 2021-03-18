@@ -102,21 +102,8 @@ def calculate_p_values(c_set_n, p_set_n):
 
 
 def make_results_table(input_obj, annotation_obj, permutation_obj):
-    cand_set = set(cand_features['feature'].values)
-    cand_genes_in_sets = annotations.annotation_sets.groupby('id')['feature'].apply(
-        lambda x: np.unique(list(set(x).intersection(cand_set))))
-    cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(annotations.annotation_array_ids)])
-    cand_genes_in_sets = cand_genes_in_sets.reset_index(level=['id'])
-    cand_genes_in_sets.columns = ['id', 'candidate_features']
-    n_genes_in_sets = pd.DataFrame(
-        annotations.annotation_sets.groupby(['id', 'name'])['feature'].nunique()[annotations.annotation_array_ids])
-    n_genes_in_sets = n_genes_in_sets.reset_index(level=['id', 'name'])
-    out = n_genes_in_sets.join(cand_genes_in_sets.set_index('id'), on='id')
-    out['n_candidates_in_set'] = [len(features) for features in out['candidate_features']]
-    out['mean_permutation_n'] = set_per_perm.mean_per_set
-    out_col_names = out.columns.values
-    out_col_names[2] = 'feature_set_n'
-    out.columns = out_col_names
+
+
     out['emp_p_e'] = set_per_perm.p_enrichment
     out['emp_p_d'] = set_per_perm.p_depletion
     out['fdr_e'] = fdr_from_p_matrix(set_per_perm.setNperPerm, out['emp_p_e'], method='enrichment')
