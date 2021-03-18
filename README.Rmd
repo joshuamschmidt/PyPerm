@@ -1,16 +1,11 @@
 ---
 title: "PySetPerm"
 author: "Joshua Schmidt"
-date: "18/03/2021"
 output: 
   github_document:
     toc: true
     toc_depth: 2
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-```
 
 ## Introduction.  
 
@@ -29,16 +24,15 @@ The aim for PySetPerm is to develop a simple, extensible framework for developin
 ## A worked example
 ```{r setup reticulate, echo=F, results="hide"}
 Sys.setenv(PATH = "$HOME/miniconda3/bin:$PATH")
-reticulate::use_condaenv('/Users/joshuaschmidt/pypermr')
+reticulate::use_condaenv('PySetPerm')
 library(reticulate)
+library(ggplot2)
 ```
 
-```{python shared by all tests, eval=T}
-import os
-os.getcwd()
-#import pysetperm as psp
-#features = psp.Features('data/genes.txt', 2000)
-#annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
+```{python shared by all tests, eval=T, messages=FALSE, result='hide'}
+import pysetperm as psp
+features = psp.Features('data/genes.txt', 2000)
+annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
 n_perms = 100000
 cores = 10
 ```
