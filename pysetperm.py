@@ -269,16 +269,15 @@ class Input:
         obj = cls.__new__(cls)
         obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
         obj.background_file = [a_obj.background_file, b_obj.background_file]
-        obj.candidates = _read_variant_file(self.candidate_file)
-        obj.background = _read_variant_file(self.background_file)
-        obj.background_features = _intersect_variants_features(self.background, features)
-        obj.background_features = _feature_list(self.background_features)
-        obj.candidate_features = _intersect_variants_features(self.candidates, features)
-        obj.candidate_array = _candidate_array(self)
-        obj.candidate_features_per_set = _per_set_candidate_genes(self, annotation)
+        obj.candidates = pd.concat([a_obj.candidates, b_obj.candidates], keys=["A", "B"])
+        obj.background = pd.concat([a_obj.background, b_obj.background], keys=["A", "B"])
+        obj.background_features = None
+        obj.candidate_features = pd.concat([a_obj.candidate_features, b_obj.candidate_features], keys=["A", "B"])
+        obj.candidate_array = [a_obj.candidate_array, b_obj.candidate_array]
+        obj.candidate_features_per_set = a_obj.candidate_features_per_set['n_candidates_in_set'].values + b_obj.candidate_features_per_set['n_candidates_in_set'].values
+        obj.candidate_features_per_set = pd.DataFrame(list(zip(a_obj.candidate_features_per_set['id'].values, obs.candidate_features_per_set)), columns =['id', 'n_candidates_in_set'])
         obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
-        obj.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, annotation.annotation_array))
-
+        obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
         return obj
 
 class Permutation:
