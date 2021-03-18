@@ -264,6 +264,11 @@ class Input:
         self.n_candidates = np.size(self.candidate_array)
         self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, annotation.annotation_array))
 
+    @classmethod
+    def add_objects(cls, a_obj, b_obj):
+        obj = cls.__new__(cls)
+        
+        return obj
 
 class Permutation:
     # constructor
