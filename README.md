@@ -36,3 +36,73 @@ unions is implemented. Future plans include equivalent intersect tests,
 block permutations and more!
 
 ## A worked example
+
+``` python
+import pysetperm as psp
+features = psp.Features('data/genes.txt', 2000)
+annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
+n_perms = 100000
+cores = 10
+```
+
+``` python
+e_input = psp.Input('data/eastern_candidates.txt',
+                    'data/eastern_background.txt.gz',
+                    features,
+                    annotations)
+
+c_input = psp.Input('data/central_candidates.txt',
+                    'data/central_background.txt.gz',
+                    features,
+                    annotations)
+
+i_input = psp.Input('data/internal_candidates.txt',
+                    'data/internal_background.txt.gz',
+                    features,
+                    annotations)
+```
+
+``` python
+e_permutations = psp.Permutation(e_input, n_perms, cores)
+c_permutations = psp.Permutation(c_input, n_perms, cores)
+i_permutations = psp.Permutation(i_input, n_perms, cores)
+
+e_per_set = psp.SetPerPerm(e_permutations,
+                           annotations,
+                           e_input,
+                           cores)
+c_per_set = psp.SetPerPerm(c_permutations,
+                           annotations,
+                           c_input,
+                           cores)
+i_per_set = psp.SetPerPerm(i_permutations,
+                           annotations,
+                           i_input,
+                           cores)
+```
+
+.add\_objects() functions for both Input and SetPerPerm objects enable
+fast creation of union sets.
+
+``` python
+# combine sims
+ec_input = psp.Input.add_objects(e_input, c_input)
+ec_per_set = psp.SetPerPerm.add_objects(e_per_set, c_per_set)
+ei_input = psp.Input.add_objects(e_input, i_input)
+ei_per_set = psp.SetPerPerm.add_objects(e_per_set, i_per_set)
+ci_input = psp.Input.add_objects(c_input, i_input)
+ci_per_set = psp.SetPerPerm.add_objects(c_per_set, i_per_set)
+eci_input = psp.Input.add_objects(ec_input, i_input)
+eci_per_set = psp.SetPerPerm.add_objects(ec_per_set, i_per_set)
+```
+
+``` python
+# results
+e_results = psp.make_results_table(e_input, annotations, e_per_set)
+c_results = psp.make_results_table(c_input, annotations, c_per_set)
+i_results = psp.make_results_table(i_input, annotations, i_per_set)
+ec_results = psp.make_results_table(ec_input, annotations, ec_per_set)
+ei_results = psp.make_results_table(ei_input, annotations, ei_per_set)
+ci_results = psp.make_results_table(ci_input, annotations, ci_per_set)
+eci_results = psp.make_results_table(eci_input, annotations, eci_per_set)
+```
