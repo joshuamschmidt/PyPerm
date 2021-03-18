@@ -290,7 +290,7 @@ class SetPerPerm:
         obj.mean_per_set = a_obj.mean_per_set + b_obj.mean_per_set
         obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
         obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function,
-                                                                   obj.set_n_per_perm)
+                                                               obj.set_n_per_perm)
         return obj
 
 # --- redundant and/or not used anymore
