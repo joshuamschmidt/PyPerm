@@ -274,8 +274,9 @@ class Input:
         obj.background_features = None
         obj.candidate_features = pd.concat([a_obj.candidate_features, b_obj.candidate_features], keys=["A", "B"])
         obj.candidate_array = [a_obj.candidate_array, b_obj.candidate_array]
-        obj.candidate_features_per_set = a_obj.candidate_features_per_set['n_candidates_in_set'].values + b_obj.candidate_features_per_set['n_candidates_in_set'].values
-        obj.candidate_features_per_set = pd.DataFrame(list(zip(a_obj.candidate_features_per_set['id'].values, obj.candidate_features_per_set)), columns =['id', 'n_candidates_in_set'])
+        total_n_candidates_in_set = a_obj.candidate_features_per_set['n_candidates_in_set'].values + b_obj.candidate_features_per_set['n_candidates_in_set'].values
+        total_candidate_features_in_set = [np.concatenate((i,j), axis=0) for i,j in zip(a_obj.candidate_features_per_set['candidate_features'], b_obj.candidate_features_per_set['candidate_features'])]
+        obj.candidate_features_per_set = pd.DataFrame(list(zip(a_obj.candidate_features_per_set['id'].values,total_candidate_features_in_set,  total_n_candidates_in_set)), columns =['id', 'candidate_features', 'n_candidates_in_set'])
         obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
         obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
         return obj
