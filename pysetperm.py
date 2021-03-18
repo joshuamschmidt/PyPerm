@@ -278,12 +278,12 @@ class Input:
 
 class Permutation:
     # constructor
-    def __init__(self, background_features, n_candidate_features, n_permutations, n_cores):
-        self.n_candidate_features = n_candidate_features
+    def __init__(self, input_obj, n_permutations, n_cores):
+        self.permutations = multicore_resample(input_obj.n_candidate_features,
+                                               n_permutations,
+                                               n_cores,
+                                               input_obj.background_features)
         self.n_permutations = n_permutations
-        self.n_cores = n_cores
-        self.permutations = multicore_resample(self.n_candidate_features, self.n_permutations, self.n_cores,
-                                               background_features)
 
 
 class SetPerPerm:
