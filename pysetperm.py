@@ -281,6 +281,17 @@ class SetPerPerm:
         self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, annotation_obj.annotation_array, n_cores)
         self.mean_per_set = np.array(np.mean(self.set_n_per_perm, axis=0))
         self.p_enrichment, self.p_depletion = calculate_p_values(input_obj.n_candidate_per_function, self.set_n_per_perm)
+        self.n_candidate_per_function = input_obj.n_candidate_per_function
+
+    @classmethod
+    def add_objects(cls, a_obj, b_obj):
+        obj = cls.__new__(cls)
+        obj.set_n_per_perm = a_obj.set_n_per_perm + b_obj.set_n_per_perm
+        obj.mean_per_set = a_obj.mean_per_set + b_obj.mean_per_set
+        obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
+        obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function,
+                                                                   obj.set_n_per_perm)
+        return obj
 
 # --- redundant and/or not used anymore
 
