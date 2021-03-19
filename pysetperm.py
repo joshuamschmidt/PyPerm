@@ -105,7 +105,7 @@ def make_results_table(input_obj, annotation_obj, permutation_set_obj):
     out = annotation_obj.annotation_sets.groupby('id', as_index=False).agg({'name': pd.Series.unique})
     out = out[out['id'].isin(annotation_obj.annotation_array_ids)]
     out = out.join(input_obj.candidate_features_per_set.set_index('id'), on='id')
-    out['mean_n_resample'] = permutation_set_obj.mean_per_set
+    out['expected_n'] = permutation_set_obj.mean_per_set
     out['emp_p_e'] = permutation_set_obj.p_enrichment
     out['emp_p_d'] = permutation_set_obj.p_depletion
     out['fdr_e'] = fdr_from_p_matrix(permutation_set_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
