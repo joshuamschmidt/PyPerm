@@ -212,8 +212,9 @@ class AnnotationSet:
 
 class Input:
     # constructor
-    def __init__(self, candidate_file, background_file, features, annotation):
+    def __init__(self, candidate_file, background_file, features, annotation, **kwags):
         # initializing instance variable
+        if 'ncol' in kwargs:
         self.candidate_file = candidate_file
         self.background_file = background_file
 
@@ -284,6 +285,12 @@ class Input:
         obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
         return obj
 
+    @classmethod
+    def union(cls, a_obj, b_obj):
+        obj = cls.__new__(cls)
+        obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
+        obj.background_file = [a_obj.background_file, b_obj.background_file]
+        return obj
 
 class Permutation:
     # constructor
