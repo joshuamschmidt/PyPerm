@@ -5,7 +5,7 @@ import concurrent.futures as cf
 from itertools import repeat
 from scipy.stats import rankdata
 from scipy.sparse import csr_matrix
-# import inspect
+import time
 from random import sample
 # import pickle
 
@@ -208,6 +208,40 @@ class AnnotationSet:
         self.n_per_set = np.asarray([np.size(np.where(a_set != 0))
                                      for a_set
                                      in self.annotation_array], dtype='uint16')
+
+
+class Variants:
+    # constructor
+    def __init__(self, filename):
+        self.filename = filename
+        self.variants = None
+    def add_variants(self):
+        tic = time.perf_counter()
+        try:
+            self.variants = pd.read_table(
+                self.filename,
+                header=0,
+                names=['Chromosome', "Start", "End"],
+                dtype={"Chromosome": str, "Start": int, "End": int}
+            )
+            toc = time.perf_counter()
+            print(f"Read in 3 column variant file in {toc - tic:0.4f} seconds")
+            #return variant_table
+        except pd.errors.ParserError:
+            try:
+                self.variants = pd.read_table(
+                    self.filename,
+                    header=0,
+                    names=['Chromosome', "Start"],
+                    dtype={"Chromosome": str, "Start": int}
+                )
+                toc = time.perf_counter()
+                print(f"Read in 2 column variant file in {toc - tic:0.4f} seconds")
+                #return variant_table
+            except pd.errors.ParserError:
+                print(f"The file: {self.filename} is neither 2 or 3 columns wide. Please correct and try again.")
+        except IOError:
+            print(f"The file: {self.filename} does not exist. Please correct and try again.")
 
 
 class Input:
