@@ -216,7 +216,7 @@ class Variants:
         self.filename = filename
         self.variants = None
     def add_variants(self):
-        tic = time.perf_counter()
+        #tic = time.perf_counter()
         try:
             self.variants = pd.read_table(
                 self.filename,
@@ -224,8 +224,8 @@ class Variants:
                 names=['Chromosome', "Start", "End"],
                 dtype={"Chromosome": str, "Start": int, "End": int}
             )
-            toc = time.perf_counter()
-            print(f"Read in 3 column variant file in {toc - tic:0.4f} seconds")
+            #toc = time.perf_counter()
+            #print(f"Read in 3 column variant file in {toc - tic:0.4f} seconds")
             #return variant_table
         except pd.errors.ParserError:
             try:
@@ -235,8 +235,9 @@ class Variants:
                     names=['Chromosome', "Start"],
                     dtype={"Chromosome": str, "Start": int}
                 )
-                toc = time.perf_counter()
-                print(f"Read in 2 column variant file in {toc - tic:0.4f} seconds")
+                self.variants['End'] = self.variants['Start']
+                #toc = time.perf_counter()
+                #print(f"Read in 2 column variant file in {toc - tic:0.4f} seconds")
                 #return variant_table
             except pd.errors.ParserError:
                 print(f"The file: {self.filename} is neither 2 or 3 columns wide. Please correct and try again.")
