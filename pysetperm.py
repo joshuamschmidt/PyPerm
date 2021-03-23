@@ -402,3 +402,4 @@ def contiguous_feature_coordinates(feature_table):
                 sub_ends[i] = sub_starts[i] + sub_lengths[i]
         c_df = pd.DataFrame(zip(repeat(c),sub_starts,sub_ends,feature_table[feature_table['Chromosome']==c]['idx'].values), columns = ['Chromosome', 'Start', "End", "idx"])
         out_df = pd.concat([out_df, c_df])
+    return out_df
