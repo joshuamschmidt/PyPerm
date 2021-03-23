@@ -384,3 +384,21 @@ def random_check_intersection(n_per_set, perms, sets, check_n):
         k = sample(range(0, n_sets - 1), 1)[0]
         check_idxs.append(len(set(perms[j]).intersection(set(sets[k]))) == n_per_set[j][k])
     return check_idxs
+
+
+# scratch
+def contiguous_feature_coordinates(feature_table):
+    out_df = pd.DataFrame({'Chromosome' : [], 'Start' : [], 'End' : [], 'idx' : []})
+    for c in feature_table['Chromosome'].unique():
+        sub_starts = feature_table[feature_table['Chromosome']==c]['Start'].values
+        sub_ends = feature_table[feature_table['Chromosome']==c]['End'].values
+        sub_lengths = sub_ends - sub_starts
+        for i in  range(len(sub_starts)):
+            if i==0:
+                sub_starts = sub_starts - sub_starts[i] + 1
+                sub_ends[i] = sub_starts[i] + sub_lengths[i]
+            elif i > 0:
+                sub_starts[i] = sub_ends[i-1] + 1
+                sub_ends[i] = sub_starts[i] + sub_lengths[i]
+        c_df = pd.DataFrame(zip(repeat(c),sub_starts,sub_ends,feature_table[feature_table['Chromosome']==c]['idx'].values), columns = ['Chromosome', 'Start', "End", "idx"])
+        out_df = pd.concat([out_df, c_df])
