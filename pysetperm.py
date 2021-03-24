@@ -7,6 +7,8 @@ from scipy.stats import rankdata
 from scipy.sparse import csr_matrix
 import time
 from random import sample
+
+
 # import pickle
 
 
@@ -155,59 +157,56 @@ def p_adjust_bh(p):
 # --- classes
 class Features:
     # constructor
-    def __init__(self, feature_file, range_modification):
+    def __init__(self, feature_file, range_modification=None):
         self.feature_file = feature_file
+        self.num_features = 0
         self.range_modification = range_modification
+        self.load_feature_table()
+        if range_modification is None:
+            return
+        self.mod_feature_table()
 
-        def _read_feature_file(file):
-            feature_table = pd.read_table(
-                file,
-                header=0,
-                names=['Chromosome', "Start", "End", "feature"],
-                dtype={"Chromosome": str, "Start": int, "End": int, "feature": str}
-            )
-            return feature_table
+    def load_feature_table(self):
+        self.feature_table = pd.read_table(
+            self.feature_file,
+            header=0,
+            names=['Chromosome', "Start", "End", "feature"],
+            dtype={"Chromosome": str, "Start": int, "End": int, "feature": str}
+        )
+        self.feature_table['idx'] = np.arange(len(self.feature_table))
+        self.num_features = self.feature_table.shape[0]
 
-        self.features = _read_feature_file(self.feature_file)
-        self.features['idx'] = np.arange(len(self.features))
+    def mod_feature_table(self):
+        self.feature_table['Start'] = self.feature_table['Start'] - self.range_modification
+        self.feature_table['End'] = self.feature_table['End'] + self.range_modification
 
-        def _feature_definition(features, range_mod):
-            ftable = features.copy(deep=True)
-            ftable['Start'] = ftable['Start'] - range_mod
-            ftable['End'] = ftable['End'] + range_mod
-            return ftable
-
-        self.features_user_def = _feature_definition(self.features, self.range_modification)
+    def __len__(self):
+        return self.num_features
 
 
-class AnnotationSet:
+class Annotations:
     # constructor
-    def __init__(self, annotation_file, features, min_size):
-        # initializing instance variable
+    def __init__(self, annotation_file, feature_obj, min_set_size=0):
         self.annotation_file = annotation_file
-        self.min_size = min_size
-
-        def _get_annotation_sets(a_file):
-            annotation_sets = pd.read_table(
-                a_file,
-                dtype={"id": str, "feature": str, "name": str}
-            )
-            return annotation_sets
-
-        def _annotation_sets_to_array(annotation_sets, feature, min_s):
-            sets = annotation_sets.join(feature.set_index('feature'), on='feature').groupby('id')['idx'].apply(list)
-            set_array = [s for s in sets if len(s) >= min_s]
-            set_array = np.sort(listnp_to_padded_nparray(set_array))
-            set_names = [i for i, s in enumerate(sets) if len(s) >= min_s]
-            set_names = sets.index[set_names]
-            return set_array, set_names
-
-        self.annotation_sets = _get_annotation_sets(self.annotation_file)
-        self.annotation_array, self.annotation_array_ids = _annotation_sets_to_array(self.annotation_sets, features,
-                                                                                     self.min_size)
+        self.min_set_size = min_set_size
+        self.load_annotation_sets()
+        self.annotation_sets_to_array(feature_obj)
         self.n_per_set = np.asarray([np.size(np.where(a_set != 0))
                                      for a_set
                                      in self.annotation_array], dtype='uint16')
+    def load_annotation_sets(self):
+        self.annotation_sets = pd.read_table(
+            self.annotation_file,
+            dtype={"id": str, "feature": str, "name": str}
+        )
+
+    def annotation_sets_to_array(self, feature_obj):
+        sets = self.annotation_sets.join(feature_obj.feature_table.set_index('feature'), on='feature').groupby('id')[
+            'idx'].apply(list)
+        set_array = [s for s in sets if len(s) >= self.min_set_size]
+        set_names = [i for i, s in enumerate(sets) if len(s) >= self.min_set_size]
+        self.annotation_array = np.sort(listnp_to_padded_nparray(set_array))
+        self.annotation_array_ids = sets.index[set_names]
 
 
 class Variants:
@@ -215,8 +214,10 @@ class Variants:
     def __init__(self, filename):
         self.filename = filename
         self.variants = None
-    def add_variants(self):
-        #tic = time.perf_counter()
+        self.num_variants = 0
+        self.load_variants()
+
+    def load_variants(self):
         try:
             self.variants = pd.read_table(
                 self.filename,
@@ -224,9 +225,6 @@ class Variants:
                 names=['Chromosome', "Start", "End"],
                 dtype={"Chromosome": str, "Start": int, "End": int}
             )
-            #toc = time.perf_counter()
-            #print(f"Read in 3 column variant file in {toc - tic:0.4f} seconds")
-            #return variant_table
         except pd.errors.ParserError:
             try:
                 self.variants = pd.read_table(
@@ -236,37 +234,29 @@ class Variants:
                     dtype={"Chromosome": str, "Start": int}
                 )
                 self.variants['End'] = self.variants['Start']
-                #toc = time.perf_counter()
-                #print(f"Read in 2 column variant file in {toc - tic:0.4f} seconds")
-                #return variant_table
             except pd.errors.ParserError:
-                print(f"The file: {self.filename} is neither 2 or 3 columns wide. Please correct and try again.")
+                print(f'The file: {self.filename} is neither 2 or 3 columns wide. Please correct and try again.')
         except IOError:
-            print(f"The file: {self.filename} does not exist. Please correct and try again.")
+            print(f'The file: {self.filename} does not exist. Please correct and try again.')
+        self.variants.drop_duplicates()
+        self.num_variants = self.variants.shape[0]
+
+    def __len__(self):
+        return self.num_variants
 
 
-class Input:
+class TestObject:
     # constructor
-    def __init__(self, candidate_file, background_file, features, annotation, **kwags):
-        # initializing instance variable
-        if 'ncol' in kwargs:
-        self.candidate_file = candidate_file
-        self.background_file = background_file
+    def __init__(self, candidate_obj, background_obj, feature_obj, annotation_obj):
 
-        def _read_variant_file(input_file):
-            variant_table = pd.read_table(
-                input_file,
-                header=0,
-                names=['Chromosome', "Start", "End"],
-                dtype={"Chromosome": str, "Start": int, "End": int}
-            )
-            return variant_table
 
-        def _intersect_variants_features(variants, feature_obj):
+
+
+        def _intersect_variants_features(variant_obj, feature_obj):
             try:
-                vtable = pr.PyRanges(variants).join(pr.PyRanges(feature_obj.features_user_def)).df
+                vtable = pr.PyRanges(variant_obj.variants).join(pr.PyRanges(feature_obj.features_user_def)).df
             except AttributeError:
-                vtable = pr.PyRanges(variants).join(pr.PyRanges(feature_obj.features)).df
+                vtable = pr.PyRanges(variant_obj.variants).join(pr.PyRanges(feature_obj.features)).df
             return vtable
 
         def _feature_list(ftable):
@@ -290,32 +280,44 @@ class Input:
             cand_genes_in_sets['n_candidates_in_set'] = cand_genes_in_sets['candidate_features'].apply(lambda x: len(x))
             return cand_genes_in_sets
 
-        self.candidates = _read_variant_file(self.candidate_file)
-        self.background = _read_variant_file(self.background_file)
-        self.background_features = _intersect_variants_features(self.background, features)
-        self.background_features = _feature_list(self.background_features)
-        self.candidate_features = _intersect_variants_features(self.candidates, features)
-        self.candidate_array = _candidate_array(self)
-        self.candidate_features_per_set = _per_set_candidate_genes(self, annotation)
-        self.n_candidates = np.size(self.candidate_array)
-        self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, annotation.annotation_array))
+        @staticmethod
+        def candidate_issubset_background(candidate_obj, background_obj):
+            return pd.merge(cand_obj.variants, backg_obj.variants).equals(cand_obj.variants)
+        if not self.candidate_issubset_background(candidate_obj, background_obj):
+            print("candidates are not a subset of the background")
+            return
+
+            self.background_features = _feature_list(_intersect_variants_features(backg_obj, features))
+            self.candidate_features = _intersect_variants_features(cand_obj, features)
+            self.candidate_array = _candidate_array(self)
+            self.candidate_features_per_set = _per_set_candidate_genes(self, annotation)
+            self.n_candidates = np.size(self.candidate_array)
+            self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array,
+                                                                        annotation.annotation_array))
+
+
 
     @classmethod
     def join_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
         obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
         obj.background_file = [a_obj.background_file, b_obj.background_file]
-        #obj.candidates = pd.concat([a_obj.candidates, b_obj.candidates], keys=["A", "B"])
-        #obj.background = pd.concat([a_obj.background, b_obj.background], keys=["A", "B"])
+        # obj.candidates = pd.concat([a_obj.candidates, b_obj.candidates], keys=["A", "B"])
+        # obj.background = pd.concat([a_obj.background, b_obj.background], keys=["A", "B"])
         obj.candidates = None
         obj.background = None
         obj.background_features = None
-        #obj.candidate_features = pd.concat([a_obj.candidate_features, b_obj.candidate_features], keys=["A", "B"])
+        # obj.candidate_features = pd.concat([a_obj.candidate_features, b_obj.candidate_features], keys=["A", "B"])
         obj.candidate_features = None
         obj.candidate_array = [a_obj.candidate_array, b_obj.candidate_array]
-        total_n_candidates_in_set = a_obj.candidate_features_per_set['n_candidates_in_set'].values + b_obj.candidate_features_per_set['n_candidates_in_set'].values
-        total_candidate_features_in_set = [np.concatenate((i,j), axis=0) for i,j in zip(a_obj.candidate_features_per_set['candidate_features'], b_obj.candidate_features_per_set['candidate_features'])]
-        obj.candidate_features_per_set = pd.DataFrame(list(zip(a_obj.candidate_features_per_set['id'].values,total_candidate_features_in_set,  total_n_candidates_in_set)), columns =['id', 'candidate_features', 'n_candidates_in_set'])
+        total_n_candidates_in_set = a_obj.candidate_features_per_set['n_candidates_in_set'].values + \
+                                    b_obj.candidate_features_per_set['n_candidates_in_set'].values
+        total_candidate_features_in_set = [np.concatenate((i, j), axis=0) for i, j in
+                                           zip(a_obj.candidate_features_per_set['candidate_features'],
+                                               b_obj.candidate_features_per_set['candidate_features'])]
+        obj.candidate_features_per_set = pd.DataFrame(list(
+            zip(a_obj.candidate_features_per_set['id'].values, total_candidate_features_in_set,
+                total_n_candidates_in_set)), columns=['id', 'candidate_features', 'n_candidates_in_set'])
         obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
         obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
         return obj
@@ -326,6 +328,7 @@ class Input:
         obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
         obj.background_file = [a_obj.background_file, b_obj.background_file]
         return obj
+
 
 class Permutation:
     # constructor
@@ -340,9 +343,11 @@ class Permutation:
 class SetPerPerm:
     # constructor
     def __init__(self, permutation_obj, annotation_obj, input_obj, n_cores):
-        self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, annotation_obj.annotation_array, n_cores)
+        self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, annotation_obj.annotation_array,
+                                                  n_cores)
         self.mean_per_set = np.array(np.mean(self.set_n_per_perm, axis=0))
-        self.p_enrichment, self.p_depletion = calculate_p_values(input_obj.n_candidate_per_function, self.set_n_per_perm)
+        self.p_enrichment, self.p_depletion = calculate_p_values(input_obj.n_candidate_per_function,
+                                                                 self.set_n_per_perm)
         self.n_candidate_per_function = input_obj.n_candidate_per_function
 
     @classmethod
@@ -356,7 +361,6 @@ class SetPerPerm:
         obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function,
                                                                obj.set_n_per_perm)
         return obj
-
 
 
 # --- redundant and/or not used anymore
@@ -392,18 +396,20 @@ def random_check_intersection(n_per_set, perms, sets, check_n):
 
 # scratch
 def contiguous_feature_coordinates(feature_table):
-    out_df = pd.DataFrame({'Chromosome' : [], 'Start' : [], 'End' : [], 'idx' : []})
+    out_df = pd.DataFrame({'Chromosome': [], 'Start': [], 'End': [], 'idx': []})
     for c in feature_table['Chromosome'].unique():
-        sub_starts = feature_table[feature_table['Chromosome']==c]['Start'].values
-        sub_ends = feature_table[feature_table['Chromosome']==c]['End'].values
+        sub_starts = feature_table[feature_table['Chromosome'] == c]['Start'].values
+        sub_ends = feature_table[feature_table['Chromosome'] == c]['End'].values
         sub_lengths = sub_ends - sub_starts
-        for i in  range(len(sub_starts)):
-            if i==0:
+        for i in range(len(sub_starts)):
+            if i == 0:
                 sub_starts = sub_starts - sub_starts[i] + 1
                 sub_ends[i] = sub_starts[i] + sub_lengths[i]
             elif i > 0:
-                sub_starts[i] = sub_ends[i-1] + 1
+                sub_starts[i] = sub_ends[i - 1] + 1
                 sub_ends[i] = sub_starts[i] + sub_lengths[i]
-        c_df = pd.DataFrame(zip(repeat(c),sub_starts,sub_ends,feature_table[feature_table['Chromosome']==c]['idx'].values), columns = ['Chromosome', 'Start', "End", "idx"])
+        c_df = pd.DataFrame(
+            zip(repeat(c), sub_starts, sub_ends, feature_table[feature_table['Chromosome'] == c]['idx'].values),
+            columns=['Chromosome', 'Start', "End", "idx"])
         out_df = pd.concat([out_df, c_df])
     return out_df
