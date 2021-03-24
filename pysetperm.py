@@ -347,6 +347,8 @@ class SetPerPerm:
 
     @classmethod
     def join_objects(cls, a_obj, b_obj):
+        """Return a new SetPerPerm object, equivalent to a + b.
+        Used because addition is too complex for default __init__"""
         obj = cls.__new__(cls)
         obj.set_n_per_perm = a_obj.set_n_per_perm + b_obj.set_n_per_perm
         obj.mean_per_set = a_obj.mean_per_set + b_obj.mean_per_set
@@ -354,6 +356,8 @@ class SetPerPerm:
         obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function,
                                                                obj.set_n_per_perm)
         return obj
+
+
 
 # --- redundant and/or not used anymore
 
