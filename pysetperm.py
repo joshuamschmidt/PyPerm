@@ -261,6 +261,9 @@ class Variants:
     def is_subset_of(self, other):
         return pd.merge(self.variants, other.variants).equals(self.variants)
 
+    def annotation_with_variant(self):
+        return self.annotated_variants['Annotation'].unique()
+
 
 def make_id_idx_map_list(annotated_variants):
     map_list = annotated_variants.groupby('Id')['Idx'].apply(list).tolist()
@@ -295,7 +298,7 @@ class TestObject:
         self.background_id_idx_map = make_id_idx_map_list(background_obj.annotated_variants)
         self.candidate_array = get_idx_array(candidate_obj.annotated_variants)
         self.n_candidates = np.size(self.candidate_array)
-        self.candidate_features_per_set = n_candidates_per_set(annotation_obj, function_set_obj)
+        #self.candidate_features_per_set = n_candidates_per_set(annotation_obj, function_set_obj)
         self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, function_set_obj.function_array2d))
 
     @classmethod

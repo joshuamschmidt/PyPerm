@@ -1,6 +1,5 @@
 import pysetperm as psp
-import numpy as np
-
+# import numpy as np
 # import pandas as pd
 # used for all sub analyses
 n_perms = 50000
