@@ -276,8 +276,7 @@ def get_idx_array(annotated_variants):
 
 
 def n_candidates_per_set(annotation_obj, function_obj):
-    #annotation is function now
-    candidate_set = set(annotation_obj.annotated_variants['Annotation'].values)
+    candidate_set = set(annotation_obj.annotation_table['Annotation'].values)
     candidates_in_function_sets = function_obj.function_sets.groupby('Id')['Annotation'].apply(
         lambda x: np.unique(list(set(x).intersection(candidate_set))))
     candidates_in_function_sets = pd.DataFrame(candidates_in_function_sets[pd.Index(function_obj.function_array2d_ids)])
