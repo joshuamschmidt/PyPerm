@@ -179,60 +179,70 @@ def load_variants(variant_file):
     return variants.drop_duplicates()
 
 
+# global functions used in class constructors/__init__
+
+def load_annotation_table(annotation_file):
+    annotation_table = pd.read_table(
+        annotation_file,
+        header=0,
+        names=['Chromosome', "Start", "End", "Annotation"],
+        dtype={"Chromosome": str, "Start": int, "End": int, "Annotation": str}
+    )
+    annotation_table['Idx'] = np.arange(len(annotation_table))
+    return annotation_table
+
+
+def modify_annotation_table(annotation_table, range_modification):
+    annotation_table['Start'] = annotation_table['Start'] - range_modification
+    annotation_table['End'] = annotation_table['End'] + range_modification
+    return annotation_table
+
+
+def load_function_sets(function_set_file):
+    function_sets = pd.read_table(
+        function_set_file,
+        header=0,
+        names=['Id', "Annotation", "FunctionName"],
+        dtype={"Id": str, "Annotation": str, "FunctionName": str}
+    )
+    return function_sets
+
+
+def function_sets_to_array(function_sets, min_set_size, annotation_obj):
+    sets = function_sets.join(annotation_obj.annotation_table.set_index('Annotation'), on='Annotation').groupby('Id')[
+        'Idx'].apply(list)
+    set_array = [s for s in sets if len(s) >= min_set_size]
+    set_names = [i for i, s in enumerate(sets) if len(s) >= min_set_size]
+    function_array = np.sort(listnp_to_padded_nparray(set_array))
+    function_array_ids = sets.index[set_names]
+    return function_array, function_array_ids
+
+
 # --- classes
-class Features:
+class AnnotationSet:
     # constructor
-    def __init__(self, feature_file=None, range_modification=None):
-        self.feature_file = feature_file
-        self.num_features = 0
+    def __init__(self, annotation_file='', range_modification=None):
+        self.annotation_file = annotation_file
         self.range_modification = range_modification
-        self.load_feature_table()
+        self.annotation_table = load_annotation_table(self.annotation_file)
         if range_modification is None:
             return
-        self.mod_feature_table()
-
-    def load_feature_table(self):
-        self.feature_table = pd.read_table(
-            self.feature_file,
-            header=0,
-            names=['Chromosome', "Start", "End", "feature"],
-            dtype={"Chromosome": str, "Start": int, "End": int, "feature": str}
-        )
-        self.feature_table['idx'] = np.arange(len(self.feature_table))
-        self.num_features = self.feature_table.shape[0]
-
-    def mod_feature_table(self):
-        self.feature_table['Start'] = self.feature_table['Start'] - self.range_modification
-        self.feature_table['End'] = self.feature_table['End'] + self.range_modification
-
-    def __len__(self):
-        return self.num_features
+        self.annotation_table = modify_annotation_table(self.annotation_table, self.range_modification)
+        self.num_annotations = self.annotation_table.shape[0]
 
 
-class Annotations:
+class FunctionSets:
     # constructor
-    def __init__(self, annotation_file=None, feature_obj=None, min_set_size=0):
-        self.annotation_file = annotation_file
+    def __init__(self, function_set_file='', min_set_size=0, annotation_obj=None):
+        self.function_set_file = function_set_file
         self.min_set_size = min_set_size
-        self.load_annotation_sets()
-        self.annotation_sets_to_array(feature_obj)
-        self.n_per_set = np.asarray([np.size(np.where(a_set != 0))
-                                     for a_set
-                                     in self.annotation_array], dtype='uint16')
-
-    def load_annotation_sets(self):
-        self.annotation_sets = pd.read_table(
-            self.annotation_file,
-            dtype={"id": str, "feature": str, "name": str}
-        )
-
-    def annotation_sets_to_array(self, feature_obj):
-        sets = self.annotation_sets.join(feature_obj.feature_table.set_index('feature'), on='feature').groupby('id')[
-            'idx'].apply(list)
-        set_array = [s for s in sets if len(s) >= self.min_set_size]
-        set_names = [i for i, s in enumerate(sets) if len(s) >= self.min_set_size]
-        self.annotation_array = np.sort(listnp_to_padded_nparray(set_array))
-        self.annotation_array_ids = sets.index[set_names]
+        self.function_sets = load_function_sets(self.function_set_file)
+        self.function_array2d, self.function_array2d_ids = function_sets_to_array(self.function_sets,
+                                                                                  self.min_set_size,
+                                                                                  annotation_obj)
+        self.n_per_set = np.asarray([np.size(np.where(function_array != 0))
+                                     for function_array
+                                     in self.function_array2d], dtype='uint16')
 
 
 class Variants:
@@ -243,50 +253,48 @@ class Variants:
         self.num_variants = self.variants.shape[0]
         self.annotated_variants = None
 
-    def annotate_variants(self, feature_obj):
-        self.annotated_variants = pr.PyRanges(self.variants).join(pr.PyRanges(feature_obj.feature_table)).df
+    def annotate_variants(self, annotation_obj):
+        self.annotated_variants = pr.PyRanges(self.variants).join(pr.PyRanges(annotation_obj.annotation_table)).df
+        self.annotated_variants['Id'] = self.annotated_variants.Chromosome.astype(str).str.cat(
+            self.annotated_variants.Start.astype(str), sep='_')
 
+    def is_subset_of(self, other):
+        return pd.merge(self.variants, other.variants).equals(self.variants)
+
+
+def make_id_idx_map_list(annotated_variants):
+    map_list = annotated_variants.groupby('Id')['Idx'].apply(list).tolist()
+    return map_list
+
+
+def get_idx_array(annotated_variants):
+    idx_array = np.asarray(np.unique(annotated_variants['Idx']))
+    return idx_array.astype('uint16')
+
+
+def n_candidates_per_set(annotation_obj, function_obj):
+    #annotation is function now
+    candidate_set = set(annotation_obj.annotated_variants['Annotation'].values)
+    candidates_in_function_sets = function_obj.function_sets.groupby('Id')['Annotation'].apply(
+        lambda x: np.unique(list(set(x).intersection(candidate_set))))
+    candidates_in_function_sets = pd.DataFrame(candidates_in_function_sets[pd.Index(function_obj.function_array2d_ids)])
+    candidates_in_function_sets = candidates_in_function_sets.reset_index(level=['Id'])
+    candidates_in_function_sets.columns = ['Id', 'CandidateAnnotations']
+    candidates_in_function_sets['n_CandidatesInSet'] = candidates_in_function_sets['CandidateAnnotations'].apply(lambda x: len(x))
+    return candidates_in_function_sets
 
 
 class TestObject:
     # constructor
-    def __init__(self, candidate_obj, background_obj, feature_obj, annotation_obj):
-        def _feature_list(ftable):
-            ftable['id'] = ftable.Chromosome.astype(str).str.cat(ftable.Start.astype(str), sep='_')
-            ftable = ftable.groupby('id')['idx'].apply(list).tolist()
-            return ftable
-
-        def _candidate_array(self):
-            feature_array = np.asarray(np.unique(self.candidate_features['idx']))
-            out = np.ndarray((1, np.size(feature_array)), dtype='uint16')
-            out[0] = feature_array
-            return out.astype('uint16')
-
-        def _per_set_candidate_genes(self, annotation):
-            cand_set = set(self.candidate_features['feature'].values)
-            cand_genes_in_sets = annotation.annotation_sets.groupby('id')['feature'].apply(
-                lambda x: np.unique(list(set(x).intersection(cand_set))))
-            cand_genes_in_sets = pd.DataFrame(cand_genes_in_sets[pd.Index(annotation.annotation_array_ids)])
-            cand_genes_in_sets = cand_genes_in_sets.reset_index(level=['id'])
-            cand_genes_in_sets.columns = ['id', 'candidate_features']
-            cand_genes_in_sets['n_candidates_in_set'] = cand_genes_in_sets['candidate_features'].apply(lambda x: len(x))
-            return cand_genes_in_sets
-
-        @staticmethod
-        def candidate_issubset_background(candidate_obj, background_obj):
-            return pd.merge(cand_obj.variants, backg_obj.variants).equals(cand_obj.variants)
-
-        if not self.candidate_issubset_background(candidate_obj, background_obj):
-            print("candidates are not a subset of the background")
+    def __init__(self, candidate_obj, background_obj, annotation_obj, function_set_obj):
+        if not candidate_obj.is_subset_of(background_obj):
+            print("error: candidate set is not a subset of the background")
             return
-
-            self.background_features = _feature_list(_intersect_variants_features(backg_obj, features))
-            self.candidate_features = _intersect_variants_features(cand_obj, features)
-            self.candidate_array = _candidate_array(self)
-            self.candidate_features_per_set = _per_set_candidate_genes(self, annotation)
-            self.n_candidates = np.size(self.candidate_array)
-            self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array,
-                                                                        annotation.annotation_array))
+        self.background_id_idx_map = make_id_idx_map_list(background_obj.annotated_variants)
+        self.candidate_array = get_idx_array(candidate_obj.annotated_variants)
+        self.n_candidates = np.size(self.candidate_array)
+        self.candidate_features_per_set = n_candidates_per_set(annotation_obj, function_set_obj)
+        self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, annotation.annotation_array))
 
     @classmethod
     def join_objects(cls, a_obj, b_obj):
