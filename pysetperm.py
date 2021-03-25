@@ -268,7 +268,10 @@ def make_id_idx_map_list(annotated_variants):
 
 
 def get_idx_array(annotated_variants):
-    idx_array = np.asarray(np.unique(annotated_variants['Idx']))
+    """returns array with shape, enables compatibility with permutation_fset_intersect"""
+    tmp_idx_array = np.asarray(np.unique(annotated_variants['Idx']))
+    idx_array = np.ndarray((1, np.size(tmp_idx_array)), dtype='uint16')
+    idx_array[0] = tmp_idx_array
     return idx_array.astype('uint16')
 
 
@@ -294,20 +297,11 @@ class TestObject:
         self.candidate_array = get_idx_array(candidate_obj.annotated_variants)
         self.n_candidates = np.size(self.candidate_array)
         self.candidate_features_per_set = n_candidates_per_set(annotation_obj, function_set_obj)
-        self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, annotation.annotation_array))
+        self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, function_set_obj.function_array2d))
 
     @classmethod
-    def join_objects(cls, a_obj, b_obj):
+    def add_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
-        obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
-        obj.background_file = [a_obj.background_file, b_obj.background_file]
-        # obj.candidates = pd.concat([a_obj.candidates, b_obj.candidates], keys=["A", "B"])
-        # obj.background = pd.concat([a_obj.background, b_obj.background], keys=["A", "B"])
-        obj.candidates = None
-        obj.background = None
-        obj.background_features = None
-        # obj.candidate_features = pd.concat([a_obj.candidate_features, b_obj.candidate_features], keys=["A", "B"])
-        obj.candidate_features = None
         obj.candidate_array = [a_obj.candidate_array, b_obj.candidate_array]
         total_n_candidates_in_set = a_obj.candidate_features_per_set['n_candidates_in_set'].values + \
                                     b_obj.candidate_features_per_set['n_candidates_in_set'].values

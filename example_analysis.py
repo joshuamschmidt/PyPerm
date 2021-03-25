@@ -1,6 +1,7 @@
 import pysetperm as psp
 import numpy as np
-#import pandas as pd
+
+# import pandas as pd
 # used for all sub analyses
 n_perms = 50000
 cores = 4
@@ -12,18 +13,13 @@ e_candidates.annotate_variants(annotation_obj=annotations)
 e_background = psp.Variants(variant_file='data/eastern_background.txt.gz')
 e_background.annotate_variants(annotation_obj=annotations)
 
-
 c_candidates = psp.Variants(variant_file='data/central_candidates.txt')
 c_background = psp.Variants(variant_file='data/central_background.txt.gz')
 
-
-
-
-
-e_input = psp.Input('data/eastern_candidates.txt',
-                    'data/eastern_background.txt.gz',
-                    features,
-                    annotations)
+e_test_obj = psp.TestObject(e_candidates,
+                            e_background,
+                            annotations,
+                            function_sets)
 
 # permutations
 e_permutations = psp.Permutation(e_input, n_perms, cores)
