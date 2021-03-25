@@ -274,7 +274,6 @@ class Variants:
         return self.annotated_variants['Annotation'].unique()
 
 
-
 def make_id_idx_map_list(annotated_variants):
     map_list = annotated_variants.groupby('Id')['Idx'].apply(list).tolist()
     return map_list
@@ -295,21 +294,22 @@ def n_candidates_per_set(annotation_obj, function_obj):
     candidates_in_function_sets = pd.DataFrame(candidates_in_function_sets[pd.Index(function_obj.function_array2d_ids)])
     candidates_in_function_sets = candidates_in_function_sets.reset_index(level=['Id'])
     candidates_in_function_sets.columns = ['Id', 'CandidateAnnotations']
-    candidates_in_function_sets['n_CandidatesInSet'] = candidates_in_function_sets['CandidateAnnotations'].apply(lambda x: len(x))
+    candidates_in_function_sets['n_CandidatesInSet'] = candidates_in_function_sets['CandidateAnnotations'].apply(
+        lambda x: len(x))
     return candidates_in_function_sets
 
 
 class TestObject:
     # constructor
-    def __init__(self, candidate_obj, background_obj, annotation_obj, function_set_obj):
+    def __init__(self, candidate_obj, background_obj, function_set_obj):
         if not candidate_obj.is_subset_of(background_obj):
             print("error: candidate set is not a subset of the background")
             return
         self.background_id_idx_map = make_id_idx_map_list(background_obj.annotated_variants)
         self.candidate_array = get_idx_array(candidate_obj.annotated_variants)
         self.n_candidates = np.size(self.candidate_array)
-        #self.candidate_features_per_set = n_candidates_per_set(annotation_obj, function_set_obj)
-        self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array, function_set_obj.function_array2d))
+        self.n_candidate_per_function = permutation_fset_intersect(
+            (self.candidate_array, function_set_obj.function_array2d))
 
     @classmethod
     def add_objects(cls, a_obj, b_obj):
