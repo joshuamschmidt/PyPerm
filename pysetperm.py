@@ -244,7 +244,7 @@ class FunctionSets:
                                      for function_array
                                      in self.function_array2d], dtype='uint16')
 
-    def update_from_gene_list(self, gene_list, annotation_obj):
+    def update_from_gene_list(self, gene_list=None, annotation_obj=None):
         self.function_sets = self.function_sets[self.function_sets['Annotation'].isin(gene_list)]
         self.function_array2d, self.function_array2d_ids = function_sets_to_array(self.function_sets,
                                                                                   self.min_set_size,
