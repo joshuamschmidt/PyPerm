@@ -244,6 +244,15 @@ class FunctionSets:
                                      for function_array
                                      in self.function_array2d], dtype='uint16')
 
+    def update_from_gene_list(self, gene_list, annotation_obj):
+        self.function_sets = self.function_sets[self.function_sets['Annotation'].isin(gene_list)]
+        self.function_array2d, self.function_array2d_ids = function_sets_to_array(self.function_sets,
+                                                                                  self.min_set_size,
+                                                                                  annotation_obj)
+        self.n_per_set = np.asarray([np.size(np.where(function_array != 0))
+                                     for function_array
+                                     in self.function_array2d], dtype='uint16')
+
 
 class Variants:
     # constructor
@@ -263,6 +272,7 @@ class Variants:
 
     def annotation_with_variant(self):
         return self.annotated_variants['Annotation'].unique()
+
 
 
 def make_id_idx_map_list(annotated_variants):
