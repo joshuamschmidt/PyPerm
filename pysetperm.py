@@ -154,10 +154,35 @@ def p_adjust_bh(p):
     return q[by_orig]
 
 
+def load_variants(variant_file):
+    variants = None
+    try:
+        variants = pd.read_table(
+            variant_file,
+            header=0,
+            names=['Chromosome', "Start", "End"],
+            dtype={"Chromosome": str, "Start": int, "End": int}
+        )
+    except pd.errors.ParserError:
+        try:
+            variants = pd.read_table(
+                variant_file,
+                header=0,
+                names=['Chromosome', "Start"],
+                dtype={"Chromosome": str, "Start": int}
+            )
+            variants['End'] = variants['Start']
+        except pd.errors.ParserError:
+            print(f'The file: {variant_file} is neither 2 or 3 columns wide. Please correct and try again.')
+    except IOError:
+        print(f'The file: {variant_file} does not exist. Please correct and try again.')
+    return variants.drop_duplicates()
+
+
 # --- classes
 class Features:
     # constructor
-    def __init__(self, feature_file, range_modification=None):
+    def __init__(self, feature_file=None, range_modification=None):
         self.feature_file = feature_file
         self.num_features = 0
         self.range_modification = range_modification
@@ -186,7 +211,7 @@ class Features:
 
 class Annotations:
     # constructor
-    def __init__(self, annotation_file, feature_obj, min_set_size=0):
+    def __init__(self, annotation_file=None, feature_obj=None, min_set_size=0):
         self.annotation_file = annotation_file
         self.min_set_size = min_set_size
         self.load_annotation_sets()
@@ -194,6 +219,7 @@ class Annotations:
         self.n_per_set = np.asarray([np.size(np.where(a_set != 0))
                                      for a_set
                                      in self.annotation_array], dtype='uint16')
+
     def load_annotation_sets(self):
         self.annotation_sets = pd.read_table(
             self.annotation_file,
@@ -211,54 +237,20 @@ class Annotations:
 
 class Variants:
     # constructor
-    def __init__(self, filename):
-        self.filename = filename
-        self.variants = None
-        self.num_variants = 0
-        self.load_variants()
-
-    def load_variants(self):
-        try:
-            self.variants = pd.read_table(
-                self.filename,
-                header=0,
-                names=['Chromosome', "Start", "End"],
-                dtype={"Chromosome": str, "Start": int, "End": int}
-            )
-        except pd.errors.ParserError:
-            try:
-                self.variants = pd.read_table(
-                    self.filename,
-                    header=0,
-                    names=['Chromosome', "Start"],
-                    dtype={"Chromosome": str, "Start": int}
-                )
-                self.variants['End'] = self.variants['Start']
-            except pd.errors.ParserError:
-                print(f'The file: {self.filename} is neither 2 or 3 columns wide. Please correct and try again.')
-        except IOError:
-            print(f'The file: {self.filename} does not exist. Please correct and try again.')
-        self.variants.drop_duplicates()
+    def __init__(self, variant_file=''):
+        self.variant_file = variant_file
+        self.variants = load_variants(self.variant_file)
         self.num_variants = self.variants.shape[0]
+        self.annotated_variants = None
 
-    def __len__(self):
-        return self.num_variants
+    def annotate_variants(self, feature_obj):
+        self.annotated_variants = pr.PyRanges(self.variants).join(pr.PyRanges(feature_obj.feature_table)).df
+
 
 
 class TestObject:
     # constructor
     def __init__(self, candidate_obj, background_obj, feature_obj, annotation_obj):
-
-
-
-
-        def _intersect_variants_features(variant_obj, feature_obj):
-            try:
-                vtable = pr.PyRanges(variant_obj.variants).join(pr.PyRanges(feature_obj.features_user_def)).df
-            except AttributeError:
-                vtable = pr.PyRanges(variant_obj.variants).join(pr.PyRanges(feature_obj.features)).df
-            return vtable
-
         def _feature_list(ftable):
             ftable['id'] = ftable.Chromosome.astype(str).str.cat(ftable.Start.astype(str), sep='_')
             ftable = ftable.groupby('id')['idx'].apply(list).tolist()
@@ -283,6 +275,7 @@ class TestObject:
         @staticmethod
         def candidate_issubset_background(candidate_obj, background_obj):
             return pd.merge(cand_obj.variants, backg_obj.variants).equals(cand_obj.variants)
+
         if not self.candidate_issubset_background(candidate_obj, background_obj):
             print("candidates are not a subset of the background")
             return
@@ -294,8 +287,6 @@ class TestObject:
             self.n_candidates = np.size(self.candidate_array)
             self.n_candidate_per_function = permutation_fset_intersect((self.candidate_array,
                                                                         annotation.annotation_array))
-
-
 
     @classmethod
     def join_objects(cls, a_obj, b_obj):

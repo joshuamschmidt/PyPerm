@@ -2,11 +2,22 @@ import pysetperm as psp
 import numpy as np
 import pandas as pd
 # used for all sub analyses
-features = psp.Features('data/genes.txt', 2000)
-annotations = psp.AnnotationSet('data/kegg.txt', features.features_user_def, 5)
+features = psp.Features(feature_file='data/genes.txt', range_modification= 2000)
+annotations = psp.Annotations(annotation_file='data/kegg.txt', feature_obj=features, min_set_size=10)
 n_perms = 50000
 cores = 4
 # specific inputs
+e_candidates = psp.Variants(variant_file='data/eastern_candidates.txt')
+e_candidates.annotate_variants(feature_obj=features)
+e_background = psp.Variants(variant_file='data/eastern_background.txt.gz')
+
+c_candidates = psp.Variants(variant_file='data/central_candidates.txt')
+c_background = psp.Variants(variant_file='data/central_background.txt.gz')
+
+
+
+
+
 e_input = psp.Input('data/eastern_candidates.txt',
                     'data/eastern_background.txt.gz',
                     features,
