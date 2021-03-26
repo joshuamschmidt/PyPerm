@@ -1,14 +1,13 @@
-#!/usr/bin/env python
-
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='PySetPerm',
-    version='0.1',
-    packages=['pysetperm'],
+    version='0.0.1',
+    description='genomic set tests',
+    py_modules=['pysetperm'],
+    package_dir={'': 'src'},
     url='',
     license='',
     author='joshua schmidt',
-    author_email='joshmschmidt1@gmail.com',
-    description='genomic set tests'
+    author_email='joshmschmidt1@gmail.com'
 )
