@@ -17,7 +17,6 @@ c_background = psp.Variants(variant_file='data/central_background.txt.gz')
 
 e_test_obj = psp.TestObject(e_candidates,
                             e_background,
-                            annotations,
                             function_sets)
 
 # permutations

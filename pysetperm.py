@@ -274,7 +274,7 @@ class Variants:
         return self.annotated_variants['Annotation'].unique()
 
 
-def make_id_idx_map_list(annotated_variants):
+def make_id_idx_map_list(annotated_variants):  # should make this a multiprocess function!
     map_list = annotated_variants.groupby('Id')['Idx'].apply(list).tolist()
     return map_list
 
@@ -314,21 +314,14 @@ class TestObject:
     @classmethod
     def add_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
+        obj.background_id_idx_map = None
         obj.candidate_array = [a_obj.candidate_array, b_obj.candidate_array]
-        total_n_candidates_in_set = a_obj.candidate_features_per_set['n_candidates_in_set'].values + \
-                                    b_obj.candidate_features_per_set['n_candidates_in_set'].values
-        total_candidate_features_in_set = [np.concatenate((i, j), axis=0) for i, j in
-                                           zip(a_obj.candidate_features_per_set['candidate_features'],
-                                               b_obj.candidate_features_per_set['candidate_features'])]
-        obj.candidate_features_per_set = pd.DataFrame(list(
-            zip(a_obj.candidate_features_per_set['id'].values, total_candidate_features_in_set,
-                total_n_candidates_in_set)), columns=['id', 'candidate_features', 'n_candidates_in_set'])
         obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
         obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
         return obj
 
     @classmethod
-    def union(cls, a_obj, b_obj):
+    def union_of_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
         obj.candidate_file = [a_obj.candidate_file, b_obj.candidate_file]
         obj.background_file = [a_obj.background_file, b_obj.background_file]
