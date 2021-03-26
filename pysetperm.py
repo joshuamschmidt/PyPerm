@@ -315,7 +315,7 @@ class TestObject:
     def add_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
         obj.background_id_idx_map = None
-        obj.candidate_array = [a_obj.candidate_array, b_obj.candidate_array]
+        obj.candidate_array = [a_obj.candidate_array, '||', b_obj.candidate_array]
         obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
         obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
         return obj
@@ -331,11 +331,12 @@ class TestObject:
 class Permutation:
     # constructor
     def __init__(self, input_obj, n_permutations, n_cores):
-        self.permutations = multicore_resample(input_obj.n_candidates,
-                                               n_permutations,
-                                               n_cores,
-                                               input_obj.background_features)
         self.n_permutations = n_permutations
+        self.permutations = multicore_resample(input_obj.n_candidates,
+                                               self.n_permutations,
+                                               n_cores,
+                                               input_obj.background_id_idx_map)
+
 
 
 class SetPerPerm:
