@@ -1,0 +1,7 @@
+README.md
+setup.py
+src/pysetperm.py
+src/PySetPerm.egg-info/PKG-INFO
+src/PySetPerm.egg-info/SOURCES.txt
+src/PySetPerm.egg-info/dependency_links.txt
+src/PySetPerm.egg-info/top_level.txt
