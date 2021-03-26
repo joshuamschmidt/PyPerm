@@ -103,19 +103,20 @@ def calculate_p_values(c_set_n, p_set_n):
     return p_e, p_d
 
 
-def make_results_table(input_obj, annotation_obj, permutation_set_obj):
-    out = annotation_obj.annotation_sets.groupby('id', as_index=False).agg({'name': pd.Series.unique})
-    out = out[out['id'].isin(annotation_obj.annotation_array_ids)]
-    out = out.join(input_obj.candidate_features_per_set.set_index('id'), on='id')
-    out['expected_n'] = permutation_set_obj.mean_per_set
-    out['emp_p_e'] = permutation_set_obj.p_enrichment
-    out['emp_p_d'] = permutation_set_obj.p_depletion
-    out['fdr_e'] = fdr_from_p_matrix(permutation_set_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
-    out['fdr_d'] = fdr_from_p_matrix(permutation_set_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
-    out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
-    out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
+def make_results_table(test_obj, function_set_obj, set_perm_obj):
+    out = function_set_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
+    out = out[out['Id'].isin(function_set_obj.function_array2d_ids)]
+    out['n_candidates'] = test_obj.n_candidate_per_function
+    out['mean_n_resample'] = set_perm_obj.mean_per_set
+    out['emp_p_e'] = set_perm_obj.p_enrichment
+    out['emp_p_d'] = set_perm_obj.p_depletion
+    out['fdr_e'] = psp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
+    out['fdr_d'] = psp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
+    out['BH_fdr_e'] = psp.p_adjust_bh(out['emp_p_e'])
+    out['BH_fdr_d'] = psp.p_adjust_bh(out['emp_p_d'])
     out = out.sort_values('emp_p_e')
     return out
+
 
 
 def fdr_from_p_matrix(perm_n_per_set, obs_p, method='enrichment'):
@@ -274,6 +275,15 @@ class Variants:
         return self.annotated_variants['Annotation'].unique()
 
 
+def multicore_make_id_idx_map_list(annotated_variants, n_cores):
+    split_annotated_variant_tables = np.array_split(annotated_variants, n_cores)
+    with cf.ProcessPoolExecutor(max_workers=n_cores) as executor:
+        results = executor.map(make_id_idx_map_list, split_annotated_variant_tables)
+    results = list(results)
+    flat_results = [item for sublist in results for item in sublist]
+    return flat_results
+
+
 def make_id_idx_map_list(annotated_variants):  # should make this a multiprocess function!
     map_list = annotated_variants.groupby('Id')['Idx'].apply(list).tolist()
     return map_list
@@ -301,11 +311,11 @@ def n_candidates_per_set(annotation_obj, function_obj):
 
 class TestObject:
     # constructor
-    def __init__(self, candidate_obj, background_obj, function_set_obj):
+    def __init__(self, candidate_obj, background_obj, function_set_obj, n_cores=1):
         if not candidate_obj.is_subset_of(background_obj):
             print("error: candidate set is not a subset of the background")
             return
-        self.background_id_idx_map = make_id_idx_map_list(background_obj.annotated_variants)
+        self.background_id_idx_map = multicore_make_id_idx_map_list(background_obj.annotated_variants, n_cores)
         self.candidate_array = get_idx_array(candidate_obj.annotated_variants)
         self.n_candidates = np.size(self.candidate_array)
         self.n_candidate_per_function = permutation_fset_intersect(
@@ -330,24 +340,23 @@ class TestObject:
 
 class Permutation:
     # constructor
-    def __init__(self, input_obj, n_permutations, n_cores):
+    def __init__(self, test_obj, n_permutations, n_cores):
         self.n_permutations = n_permutations
-        self.permutations = multicore_resample(input_obj.n_candidates,
+        self.permutations = multicore_resample(test_obj.n_candidates,
                                                self.n_permutations,
                                                n_cores,
-                                               input_obj.background_id_idx_map)
-
+                                               test_obj.background_id_idx_map)
 
 
 class SetPerPerm:
     # constructor
-    def __init__(self, permutation_obj, annotation_obj, input_obj, n_cores):
-        self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, annotation_obj.annotation_array,
+    def __init__(self, permutation_obj, function_set_obj, test_obj, n_cores):
+        self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, function_set_obj.function_array2d,
                                                   n_cores)
         self.mean_per_set = np.array(np.mean(self.set_n_per_perm, axis=0))
-        self.p_enrichment, self.p_depletion = calculate_p_values(input_obj.n_candidate_per_function,
+        self.p_enrichment, self.p_depletion = calculate_p_values(test_obj.n_candidate_per_function,
                                                                  self.set_n_per_perm)
-        self.n_candidate_per_function = input_obj.n_candidate_per_function
+        self.n_candidate_per_function = test_obj.n_candidate_per_function
 
     @classmethod
     def join_objects(cls, a_obj, b_obj):
