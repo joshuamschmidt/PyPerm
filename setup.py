@@ -1,9 +1,11 @@
-from setuptools import setup
+#!/usr/bin/env python
+
+from distutils.core import setup
 
 setup(
     name='PySetPerm',
     version='0.1',
-    packages=[''],
+    packages=['pysetperm'],
     url='',
     license='',
     author='joshua schmidt',
