@@ -30,6 +30,24 @@ e_per_set = psp.SetPerPerm(e_permutations,
                            cores)
 
 # results tables
-e_results = psp.make_results_table(e_input, annotations, e_per_set)
+e_results = make_results_table(e_input, annotations, e_per_set)
 
 
+
+
+
+
+
+def make_results_table(test_obj, function_set_obj, set_perm_obj):
+    out = function_set_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
+    out = out[out['Id'].isin(function_set_obj.function_array2d_ids)]
+    out['n_candidates'] = test_obj.n_candidate_per_function
+    out['mean_n_resample'] = set_perm_obj.mean_per_set
+    out['emp_p_e'] = set_perm_obj.p_enrichment
+    out['emp_p_d'] = set_perm_obj.p_depletion
+    out['fdr_e'] = psp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
+    out['fdr_d'] = psp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
+    out['BH_fdr_e'] = psp.p_adjust_bh(out['emp_p_e'])
+    out['BH_fdr_d'] = psp.p_adjust_bh(out['emp_p_d'])
+    out = out.sort_values('emp_p_e')
+    return out
