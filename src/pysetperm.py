@@ -239,20 +239,16 @@ class FunctionSets:
         self.min_set_size = min_set_size
         self.function_sets = load_function_sets(self.function_set_file)
         self.function_array2d, self.function_array2d_ids = function_sets_to_array(self.function_sets,
-                                                                                  self.min_set_size,
-                                                                                  annotation_obj)
-        self.n_per_set = np.asarray([np.size(np.where(function_array != 0))
-                                     for function_array
-                                     in self.function_array2d], dtype='uint16')
+        self.min_set_size,
+        annotation_obj)
+        self.n_per_set = np.asarray([np.size(np.where(function_array != 0)) for function_array in self.function_array2d], dtype='uint16')
 
     def update_from_gene_list(self, gene_list=None, annotation_obj=None):
         self.function_sets = self.function_sets[self.function_sets['Annotation'].isin(gene_list)]
         self.function_array2d, self.function_array2d_ids = function_sets_to_array(self.function_sets,
-                                                                                  self.min_set_size,
-                                                                                  annotation_obj)
-        self.n_per_set = np.asarray([np.size(np.where(function_array != 0))
-                                     for function_array
-                                     in self.function_array2d], dtype='uint16')
+        self.min_set_size,
+        annotation_obj)
+        self.n_per_set = np.asarray([np.size(np.where(function_array != 0)) for function_array in self.function_array2d], dtype='uint16')
 
 
 class Variants:
@@ -342,20 +338,15 @@ class Permutation:
     # constructor
     def __init__(self, test_obj, n_permutations, n_cores):
         self.n_permutations = n_permutations
-        self.permutations = multicore_resample(test_obj.n_candidates,
-                                               self.n_permutations,
-                                               n_cores,
-                                               test_obj.background_id_idx_map)
+        self.permutations = multicore_resample(test_obj.n_candidates, self.n_permutations, n_cores, test_obj.background_id_idx_map)
 
 
 class SetPerPerm:
     # constructor
     def __init__(self, permutation_obj, function_set_obj, test_obj, n_cores):
-        self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, function_set_obj.function_array2d,
-                                                  n_cores)
+        self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, function_set_obj.function_array2d, n_cores)
         self.mean_per_set = np.array(np.mean(self.set_n_per_perm, axis=0))
-        self.p_enrichment, self.p_depletion = calculate_p_values(test_obj.n_candidate_per_function,
-                                                                 self.set_n_per_perm)
+        self.p_enrichment, self.p_depletion = calculate_p_values(test_obj.n_candidate_per_function, self.set_n_per_perm)
         self.n_candidate_per_function = test_obj.n_candidate_per_function
 
     @classmethod
@@ -366,8 +357,7 @@ class SetPerPerm:
         obj.set_n_per_perm = a_obj.set_n_per_perm + b_obj.set_n_per_perm
         obj.mean_per_set = a_obj.mean_per_set + b_obj.mean_per_set
         obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
-        obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function,
-                                                               obj.set_n_per_perm)
+        obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function, obj.set_n_per_perm)
         return obj
 
 
