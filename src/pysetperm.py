@@ -157,27 +157,26 @@ def p_adjust_bh(p):
 
 def load_variants(variant_file):
     variants = None
+    cols = ["Chromosome", "Start", "End"]
+    possible_chr = ["CHR","CHROMOSOME","chr","chromosome","Chromosome"]
+    variant_header= pd.read_table(variant_file, header=None, nrows=1)
+    ncols=len(variant_header.columns)
+    dtype_dict = {"Chromosome": str, "Start": int, "End": int}
+    if(ncols < 2 or ncols > 3):
+        raise ValueError("variant inputs nust have 2 or 3 columns only!")
+    has_header=0
+    if(variant_header.iloc[0][0] not in possible_chr):
+        has_header='infer'
     try:
         variants = pd.read_table(
             variant_file,
-            header=0,
-            names=['Chromosome', "Start", "End"],
-            dtype={"Chromosome": str, "Start": int, "End": int}
+            header=has_header,
+            names=cols[:ncols],
+            dtype={col: dtype_dict[col] for col in cols[:ncols]} 
         )
     except pd.errors.ParserError:
-        try:
-            variants = pd.read_table(
-                variant_file,
-                header=0,
-                names=['Chromosome', "Start"],
-                dtype={"Chromosome": str, "Start": int}
-            )
-            variants['End'] = variants['Start']
-        except pd.errors.ParserError:
-            print(f'The file: {variant_file} is neither 2 or 3 columns wide. Please correct and try again.')
-    except IOError:
         print(f'The file: {variant_file} does not exist. Please correct and try again.')
-    return variants.drop_duplicates()
+    return pr.PyRanges(variants.drop_duplicates())
 
 
 # global functions used in class constructors/__init__
