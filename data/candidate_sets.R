@@ -34,7 +34,7 @@ foverlaps(pbsnj[c.p <= 0.00002], genes, nomatch = 0)[,uniqueN(gene)]
 # 106
 
 cutoffs <- c(0.005,0.001,0.0005, 0.000228, 0.000035, 0.000015, 0.000192, 0.00004, 0.00002)
-names(cutoffs) <- c(rep.int("ancestral",times=3), rep.int("eastern",times=3), rep.int("eastern",times=3) )
+names(cutoffs) <- c(rep.int("ancestral",times=3), rep.int("eastern",times=3), rep.int("central",times=3) )
 
 cols <- c("anc.p","e.p","c.p")
 names(cols) <- c("ancestral","eastern","central")
@@ -62,7 +62,11 @@ genes <- fread('../PySetPerm/data/genes.txt')
 genes[,start:=start-5000]
 genes[,end:=end+5000]
 setkey(genes, chr, start, end)
-pbs.bg <- foverlaps(pbsnj, genes, nomatch = 0)[,.(chr,end=i.end)]
+pbs.bg <- unique(foverlaps(pbsnj, genes, nomatch = 0)[,.(chr,end=i.end)])
+pclr.bg <- unique(foverlaps(anc.windows, genes, nomatch = 0)[,.(chr,end=i.end)])
+
+fwrite(x=pbs.bg,file = "pbsnj-bg.snps.txt", quote = F, sep = "\t",col.names = T, row.names = F)
+fwrite(x=pclr.bg,file = "ancestral-bg.snps.txt", quote = F, sep = "\t",col.names = T, row.names = F)
 
 
 
