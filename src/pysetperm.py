@@ -255,7 +255,7 @@ class Variants:
     def __init__(self, variant_file=''):
         self.variant_file = variant_file
         self.variants = load_variants(self.variant_file)
-        self.num_variants = self.variants.shape[0]
+        self.num_variants = self.variants.df.shape[0]
         self.annotated_variants = None
 
     def annotate_variants(self, annotation_obj):
