@@ -4,8 +4,8 @@ library(data.table)
 pbsnj <- readRDS('pbsnj.subspecies.pvalues.rds')
 anc.windows <- readRDS('threepclr.anc.pvalues.rds')
 genes <- fread('../PySetPerm/data/genes.txt')
-genes[,start:=start-2000]
-genes[,end:=end+2000]
+genes[,start:=start-5000]
+genes[,end:=end+5000]
 setkey(genes, chr, start, end)
 pbsnj[,end:=start]
 anc.windows[,end:=start]
@@ -48,25 +48,21 @@ for (i in 1:length(cutoffs)) {
   col <- cols[lineage]
   
   if(lineage=="ancestral"){
-    tmp <- anc.windows[get(col) <= c,.(chr,end)]
+    tmp <- unique(foverlaps(anc.windows[get(col) <= c], genes, nomatch = 0)[,.(chr, start=i.start, end=i.end)])
     candidates[[paste(lineage,c,"candidate.snps.txt",sep="-")]] <- tmp
   } else {
-    tmp <- pbsnj[get(col) <= c, .(chr,end)]
+    tmp <- unique(foverlaps(pbsnj[get(col) <= c], genes, nomatch = 0)[,.(chr, start=i.start, end=i.end)])
     candidates[[paste(lineage,c,"candidate.snps.txt",sep="-")]] <- tmp
   }
 }
 lapply(1:length(candidates), function(x) fwrite(x=candidates[[x]],file = names(candidates)[x], quote = F, sep = "\t",col.names = T, row.names = F))
 
 # backgrounds.
-genes <- fread('../PySetPerm/data/genes.txt')
-genes[,start:=start-5000]
-genes[,end:=end+5000]
-setkey(genes, chr, start, end)
-pbs.bg <- unique(foverlaps(pbsnj, genes, nomatch = 0)[,.(chr,end=i.end)])
-pclr.bg <- unique(foverlaps(anc.windows, genes, nomatch = 0)[,.(chr,end=i.end)])
+pbs.bg <- unique(foverlaps(pbsnj, genes, nomatch = 0)[,.(chr,start=i.start,end=i.end)])
+pclr.bg <- unique(foverlaps(anc.windows, genes, nomatch = 0)[,.(chr,start=i.start,end=i.end)])
 
-fwrite(x=pbs.bg,file = "pbsnj-bg.snps.txt", quote = F, sep = "\t",col.names = T, row.names = F)
-fwrite(x=pclr.bg,file = "ancestral-bg.snps.txt", quote = F, sep = "\t",col.names = T, row.names = F)
+fwrite(x=unique(pbs.bg[,.(chr,start,end)]),file = "pbsnj-bg.snps.txt", quote = F, sep = "\t",col.names = T, row.names = F)
+fwrite(x=unique(pbs.bg[,.(chr,start,end)]),file = "ancestral-bg.snps.txt", quote = F, sep = "\t",col.names = T, row.names = F)
 
 
 
