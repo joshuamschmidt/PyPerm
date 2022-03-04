@@ -259,7 +259,7 @@ class Variants:
         self.annotated_variants = None
 
     def annotate_variants(self, annotation_obj):
-        self.annotated_variants = pr.PyRanges(self.variants).join(pr.PyRanges(annotation_obj.annotation_table)).df
+        self.annotated_variants = self.variants.join(pr.PyRanges(annotation_obj.annotation_table)).df
         self.annotated_variants['Id'] = self.annotated_variants.Chromosome.astype(str).str.cat(
             self.annotated_variants.Start.astype(str), sep='_')
 
