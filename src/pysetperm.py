@@ -264,7 +264,8 @@ class Variants:
             self.annotated_variants.Start.astype(str), sep='_')
 
     def is_subset_of(self, other):
-        return pd.merge(self.variants, other.variants).equals(self.variants)
+        #return pd.merge(self.variants, other.variants).equals(self.variants)
+        return self.variants.df.shape[0]==self.variants.intersect(other.variants).df.shape[0]
 
     def annotation_with_variant(self):
         return self.annotated_variants['Annotation'].unique()
