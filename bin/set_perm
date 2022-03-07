@@ -117,7 +117,7 @@ def main():
     single_perm_objs = [None] * len(input_list)
     single_names = [None] * len(input_list)
     single_results = [None] * len(input_list)
-
+    single_per_set = [None] * len(input_list)
     for j, i_group in enumerate(input_list):
         name, cands, bg = i_group
         single_names[j] = name
@@ -133,15 +133,20 @@ def main():
         single_test_objs[j] = test_obj
         single_perm_objs[j] = perm_obj
         single_results[j] = results
+        single_per_set[j] = per_set
 
     if(len(args.joint)>0):
+        joint_test_results = []
+        joint_test_names = []
         for k, join_group in enumerate(args.joint):
             n_joins = len(join_group)
-            idxs = [None] * n_joins
-            for l, group in enumerate(join_group):
-                idxs[l] = single_names.index(group)
-            joint_obj = 
-
+            idxs=[single_names.index(group) for group in join_group]
+            joint_obj = sp.TestObject.add_objects(*[single_test_objs[i] for i in idxs])
+            joint_per_set = sp.SetPerPerm.join_objects(*[single_per_set[i] for i in idxs])
+            joint_results = make_results_table(joint_obj, function_sets, joint_per_set)
+            joint_results.sort_values('fdr_e')
+            joint_test_results.append(joint_results)
+            joint_test_names.append("_".join(join_group))
 
 if __name__ == '__main__':
     main()
