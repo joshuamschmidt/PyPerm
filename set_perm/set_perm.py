@@ -354,15 +354,14 @@ class SetPerPerm:
         self.mean_per_set = np.array(np.mean(self.set_n_per_perm, axis=0))
         self.p_enrichment, self.p_depletion = calculate_p_values(test_obj.n_candidate_per_function, self.set_n_per_perm)
         self.n_candidate_per_function = test_obj.n_candidate_per_function
-
     @classmethod
-    def join_objects(cls, a_obj, b_obj):
+    def join_objects(cls, *args):
         """Return a new SetPerPerm object, equivalent to a + b.
         Used because addition is too complex for default __init__"""
         obj = cls.__new__(cls)
-        obj.set_n_per_perm = a_obj.set_n_per_perm + b_obj.set_n_per_perm
-        obj.mean_per_set = a_obj.mean_per_set + b_obj.mean_per_set
-        obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
+        obj.set_n_per_perm = sum([ obj.set_n_per_perm for obj in args])
+        obj.mean_per_set = sum([ obj.mean_per_set for obj in args])
+        obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
         obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function, obj.set_n_per_perm)
         return obj
 
