@@ -1,0 +1,147 @@
+#!/usr/bin/env python
+import argparse
+import os
+import sys
+import textwrap
+from set_perm import set_perm as sp
+import pandas as pd
+import numpy as np
+
+'''required and optional argument parser'''
+
+parser = argparse.ArgumentParser(prog='set_perm',
+                        formatter_class=argparse.RawDescriptionHelpFormatter,
+                        description=textwrap.dedent('''\
+                        Simple Gene Set enrichment test
+                        --------------------------------------------
+                        Generates a gene set enrichment test report file
+                        for each input file/background sets.
+                        
+                        NOTES:
+                        Number of background files must much number of candidate files.
+                        Candidate SNP/Fatures must be a subset of background files.
+
+                        !!!!!Python needs to be >=3.9!!!!!!
+                        '''),
+                        add_help=False,
+                        epilog="Questions, bugs etc?\njoshmschmidt1@gmail.com\ngithub.com/joshuamschmidt")
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+optional = parser.add_argument_group('optional arguments')
+
+# Add back help 
+optional.add_argument(
+    '-h',
+    '--help',
+    action='help',
+    default=argparse.SUPPRESS,
+    help='show this help message and exit'
+)
+required.add_argument('--candidates', type=str, dest='c_files', nargs='+', default=[],
+                    help='one or more candidate snp/feature files. Must be passed as a comma sep name,file tuple')
+
+required.add_argument('--background', type=str, dest='b_files', nargs='+', default=[],
+                    help='one or more background snp/feature files. Must be passed as a comma sep name,file tuple')
+
+required.add_argument('--feature_def', type=str, dest='feature_def',
+                    help='file that defines features e.g. genes: chr start stop name')
+
+required.add_argument('--function_def', type=str, dest='function_def',
+                    help='file that defines function sets')
+
+optional.add_argument('--min_set_size', dest='min_set_size', type=int,
+                       help='set minium number of genes required in feature set. Default: 10')
+parser.set_defaults(min_set_size=10)
+
+optional.add_argument('--n_perms', dest='n_perms', type=int,
+                       help='Number of random permuations for p-value estimation. Default: 10,000')
+parser.set_defaults(n_perms=10000)
+
+optional.add_argument('--joint', dest='joint', type=str, nargs='+', default= [],
+                       help='a list of samples to be analysed jointly, e.g. a,b or a,b,c'. )
+
+optional.add_argument('--gene_def', dest='gene_def', type=int, default= 0,
+                       help='an int to specifiy if feature defs are changed in bp. Currently modfies both start and end coordinates. Default=0')
+
+optional.add_argument('--threads', type=int, dest='threads',
+                       help='multithreaded mode with int threads')
+
+def make_results_table(test_obj, function_set_obj, set_perm_obj):
+    out = function_set_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
+    out = out[out['Id'].isin(function_set_obj.function_array2d_ids)]
+    out['n_candidates'] = test_obj.n_candidate_per_function
+    out['mean_n_resample'] = set_perm_obj.mean_per_set
+    out['emp_p_e'] = set_perm_obj.p_enrichment
+    out['emp_p_d'] = set_perm_obj.p_depletion
+    out['fdr_e'] = sp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
+    out['fdr_d'] = sp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
+    out['BH_fdr_e'] = sp.p_adjust_bh(out['emp_p_e'])
+    out['BH_fdr_d'] = sp.p_adjust_bh(out['emp_p_d'])
+    out = out.sort_values('emp_p_e')
+    return out
+
+
+#  sorted(annotations.annotation_table[annotations.annotation_table['Idx'].isin(test_obj.candidate_array[0])]['Annotation'].values)
+
+def input_arg_checker(cand_tuple_list, back_tuple_list):
+    if(len(cand_tuple_list) != len(back_tuple_list)):
+        raise ValueError('candidate and background lists must be the same length! Aborting!')
+    try:
+        cand_dict=dict(cand_tuple_list)
+    except:
+        print("List of candidate files is not list of tuples")
+    try:
+        bg_dict=dict(back_tuple_list)
+    except:
+        print("List of background files is not list of tuples")
+    if(cand_dict.keys() != bg_dict.keys()):
+        raise ValueError('candidate and background lists do not have the same set of sample names! Aborting!')
+    try:
+        combined_list=[(k, cand_dict[k], bg_dict[k]) for k in sorted(cand_dict)]
+    except:
+        print("error in merging candidate and background file lists!")
+    return combined_list
+
+def main():
+    args = parser.parse_args()
+    annotations = sp.AnnotationSet(annotation_file=args.feature_def, range_modification=args.gene_def)
+    function_sets = sp.FunctionSets(function_set_file=args.function_def, min_set_size=args.min_set_size, annotation_obj=annotations)
+    # check that cand and back files are correctly named.....
+    try:
+       input_list=input_arg_checker(args.c_files, args.b_files)
+    except:
+        print("error in either candidate or background files")
+
+    # begin
+    single_test_objs = [None] * len(input_list)
+    single_perm_objs = [None] * len(input_list)
+    single_names = [None] * len(input_list)
+    single_results = [None] * len(input_list)
+
+    for j, i_group in enumerate(input_list):
+        name, cands, bg = i_group
+        single_names[j] = name
+        cand_variants = sp.Variants(variant_file=cands)
+        cand_variants.annotate_variants(annotation_obj=annotations)
+        bg_variants =  sp.Variants(variant_file=bg)
+        bg_variants.annotate_variants(annotation_obj=annotations)
+        test_obj = sp.TestObject(cand_variants, bg_variants, function_sets, n_cores = arg.threads)
+        perm_obj = sp.Permutation(test_obj, arg.n_perms, arg.threads)
+        per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, arg.threads)
+        results = make_results_table(test_obj, function_sets, per_set)
+        results.sort_values('fdr_e')
+        single_test_objs[j] = test_obj
+        single_perm_objs[j] = perm_obj
+        single_results[j] = results
+
+    if(len(args.joint)>0):
+        for k, join_group in enumerate(args.joint):
+            n_joins = len(join_group)
+            idxs = [None] * n_joins
+            for l, group in enumerate(join_group):
+                idxs[l] = single_names.index(group)
+            joint_obj = 
+
+
+if __name__ == '__main__':
+    main()

@@ -316,16 +316,22 @@ class TestObject:
         self.n_candidates = np.size(self.candidate_array)
         self.n_candidate_per_function = permutation_fset_intersect(
             (self.candidate_array, function_set_obj.function_array2d))
-
+    # @classmethod
+    # def add_objects(cls, a_obj, b_obj):
+    #     obj = cls.__new__(cls)
+    #     obj.background_id_idx_map = None
+    #     obj.candidate_array = [a_obj.candidate_array, '||', b_obj.candidate_array]
+    #     obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
+    #     obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
+    #     return obj
     @classmethod
-    def add_objects(cls, a_obj, b_obj):
+    def add_objects(cls, *args):
         obj = cls.__new__(cls)
         obj.background_id_idx_map = None
-        obj.candidate_array = [a_obj.candidate_array, '||', b_obj.candidate_array]
-        obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
-        obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
+        obj.candidate_array = [ obj.candidate_array[0] for obj in args ]
+        obj.n_candidates = sum([ obj.n_candidates for obj in args])
+        obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
         return obj
-
     @classmethod
     def union_of_objects(cls, a_obj, b_obj):
         obj = cls.__new__(cls)
