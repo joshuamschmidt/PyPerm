@@ -123,8 +123,7 @@ def main():
         single_perm_objs[j] = perm_obj
         per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, threads)
         single_per_set[j] = per_set
-        results = make_results_table(test_obj, function_sets, per_set)
-        results.sort_values('fdr_e')
+        results = sp.make_results_table(test_obj, function_sets, per_set)
         single_results[j] = results
         
 

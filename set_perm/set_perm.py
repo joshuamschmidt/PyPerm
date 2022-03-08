@@ -328,7 +328,7 @@ class TestObject:
         self.n_candidates = np.size(self.candidate_array)
         self.n_candidate_per_function = permutation_fset_intersect(
             (self.candidate_array, function_set_obj.function_array2d))
-        self.candidates_in_functions_df = candidates_per_set(self.candidate_array, function_obj, annotation_obj)
+        self.candidates_in_functions_df = candidates_per_set(self.candidate_array, function_set_obj, annotation_obj)
     # @classmethod
     # def add_objects(cls, a_obj, b_obj):
     #     obj = cls.__new__(cls)
