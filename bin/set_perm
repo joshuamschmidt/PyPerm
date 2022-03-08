@@ -66,23 +66,10 @@ optional.add_argument('--gene_def', dest='gene_def', type=int, default= 0,
 optional.add_argument('--threads', type=int, dest='threads',
                        help='multithreaded mode with int threads')
 
-def make_results_table(test_obj, function_set_obj, set_perm_obj):
-    out = function_set_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
-    out = out[out['Id'].isin(function_set_obj.function_array2d_ids)]
-    out['n_candidates'] = test_obj.n_candidate_per_function
-    out['mean_n_resample'] = set_perm_obj.mean_per_set
-    out['emp_p_e'] = set_perm_obj.p_enrichment
-    out['emp_p_d'] = set_perm_obj.p_depletion
-    out['fdr_e'] = sp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
-    out['fdr_d'] = sp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
-    out['BH_fdr_e'] = sp.p_adjust_bh(out['emp_p_e'])
-    out['BH_fdr_d'] = sp.p_adjust_bh(out['emp_p_d'])
-    out = out.sort_values('emp_p_e')
-    return out
-
 
 #  sorted(annotations.annotation_table[annotations.annotation_table['Idx'].isin(test_obj.candidate_array[0])]['Annotation'].values)
 
+# [('central', 'data/central-0.000192-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('eastern', 'data/eastern-0.000228-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('internal', 'data/ancestral-0.005-candidate.snps.bed.gz', 'data/ancestral-bg.bed.gz')] 
 def input_arg_checker(cand_tuple_list, back_tuple_list):
     if(len(cand_tuple_list) != len(back_tuple_list)):
         raise ValueError('candidate and background lists must be the same length! Aborting!')
@@ -113,27 +100,33 @@ def main():
         print("error in either candidate or background files")
 
     # begin
+    single_cand_objs = [None] * len(input_list)
     single_test_objs = [None] * len(input_list)
     single_perm_objs = [None] * len(input_list)
     single_names = [None] * len(input_list)
     single_results = [None] * len(input_list)
     single_per_set = [None] * len(input_list)
+
+    n_perms=arg.n_perms
+    threads=arg_threads
     for j, i_group in enumerate(input_list):
         name, cands, bg = i_group
         single_names[j] = name
         cand_variants = sp.Variants(variant_file=cands)
         cand_variants.annotate_variants(annotation_obj=annotations)
+        single_cand_objs[j]=cand_variants
         bg_variants =  sp.Variants(variant_file=bg)
         bg_variants.annotate_variants(annotation_obj=annotations)
-        test_obj = sp.TestObject(cand_variants, bg_variants, function_sets, n_cores = arg.threads)
-        perm_obj = sp.Permutation(test_obj, arg.n_perms, arg.threads)
-        per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, arg.threads)
+        test_obj = sp.TestObject(cand_variants, bg_variants, function_sets, annotations, n_cores = threads)
+        single_test_objs[j] = test_obj
+        perm_obj = sp.Permutation(test_obj, n_perms, threads)
+        single_perm_objs[j] = perm_obj
+        per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, threads)
+        single_per_set[j] = per_set
         results = make_results_table(test_obj, function_sets, per_set)
         results.sort_values('fdr_e')
-        single_test_objs[j] = test_obj
-        single_perm_objs[j] = perm_obj
         single_results[j] = results
-        single_per_set[j] = per_set
+        
 
     if(len(args.joint)>0):
         joint_test_results = []

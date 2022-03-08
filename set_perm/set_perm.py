@@ -103,17 +103,22 @@ def calculate_p_values(c_set_n, p_set_n):
     return p_e, p_d
 
 
-def make_results_table(test_obj, function_set_obj, set_perm_obj):
-    out = function_set_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
-    out = out[out['Id'].isin(function_set_obj.function_array2d_ids)]
+def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
+    out = function_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
+    out = out[out['Id'].isin(function_obj.function_array2d_ids)]
     out['n_candidates'] = test_obj.n_candidate_per_function
     out['mean_n_resample'] = set_perm_obj.mean_per_set
+    e_array = np.asarray(out['n_candidates'] / out['mean_n_resample'].values)
+    log_e = np.log2(e_array, out=np.empty((np.shape(e_array)[0],)) * np.nan, where=(e_array!=0))
+    out['enrichment(log2)'] = log_e 
     out['emp_p_e'] = set_perm_obj.p_enrichment
     out['emp_p_d'] = set_perm_obj.p_depletion
-    out['fdr_e'] = psp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
-    out['fdr_d'] = psp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
-    out['BH_fdr_e'] = psp.p_adjust_bh(out['emp_p_e'])
-    out['BH_fdr_d'] = psp.p_adjust_bh(out['emp_p_d'])
+    out['fdr_e'] = sp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
+    out['fdr_d'] = sp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
+    out['BH_fdr_e'] = sp.p_adjust_bh(out['emp_p_e'])
+    out['BH_fdr_d'] = sp.p_adjust_bh(out['emp_p_d'])
+    #out_genes = candidates_per_set(test_obj, function_obj, annotation_obj)
+    out = pd.merge(out, test_obj.candidates_in_functions_df, on='Id', how='outer')
     out = out.sort_values('emp_p_e')
     return out
 
@@ -304,10 +309,17 @@ def n_candidates_per_set(annotation_obj, function_obj):
         lambda x: len(x))
     return candidates_in_function_sets
 
+def candidates_per_set(candidate_array, function_obj, annotation_obj):
+    candidate_idx_in_function_set = [np.intersect1d(i, candidate_array) if len(np.intersect1d(i, candidate_array)) > 0 else np.asarray(-9) for i in function_obj.function_array2d] 
+    candidate_genes_in_function_set = [np.sort(annotation_obj.annotation_table.loc[annotation_obj.annotation_table['Idx'].isin(candidate_idxs)]['Annotation'].values) if np.all(candidate_idxs!=-9)  else  np.asarray(None) for candidate_idxs in candidate_idx_in_function_set]
+    d = {'Id': function_obj.function_array2d_ids, 'Genes': candidate_genes_in_function_set}
+    df = pd.DataFrame(data=d)
+    return df
+
 
 class TestObject:
     # constructor
-    def __init__(self, candidate_obj, background_obj, function_set_obj, n_cores=1):
+    def __init__(self, candidate_obj, background_obj, function_set_obj, annotation_obj, n_cores=1):
         if not candidate_obj.is_subset_of(background_obj):
             print("error: candidate set is not a subset of the background")
             return
@@ -316,6 +328,7 @@ class TestObject:
         self.n_candidates = np.size(self.candidate_array)
         self.n_candidate_per_function = permutation_fset_intersect(
             (self.candidate_array, function_set_obj.function_array2d))
+        self.candidates_in_functions_df = candidates_per_set(self.candidate_array, function_obj, annotation_obj)
     # @classmethod
     # def add_objects(cls, a_obj, b_obj):
     #     obj = cls.__new__(cls)
