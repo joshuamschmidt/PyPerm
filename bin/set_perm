@@ -68,8 +68,8 @@ optional.add_argument('--threads', type=int, dest='threads',
 
 
 #  sorted(annotations.annotation_table[annotations.annotation_table['Idx'].isin(test_obj.candidate_array[0])]['Annotation'].values)
-
-# [('central', 'data/central-0.000192-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('eastern', 'data/eastern-0.000228-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('internal', 'data/ancestral-0.005-candidate.snps.bed.gz', 'data/ancestral-bg.bed.gz')] 
+# sys.modules.pop('set_perm') 
+#  input_list=[('central', 'data/central-0.000192-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('eastern', 'data/eastern-0.000228-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('internal', 'data/ancestral-0.005-candidate.snps.bed.gz', 'data/ancestral-bg.bed.gz')] 
 def input_arg_checker(cand_tuple_list, back_tuple_list):
     if(len(cand_tuple_list) != len(back_tuple_list)):
         raise ValueError('candidate and background lists must be the same length! Aborting!')
@@ -92,6 +92,8 @@ def input_arg_checker(cand_tuple_list, back_tuple_list):
 def main():
     args = parser.parse_args()
     annotations = sp.AnnotationSet(annotation_file=args.feature_def, range_modification=args.gene_def)
+    # annotations = sp.AnnotationSet(annotation_file='data/genes.txt', range_modification=2000)   
+    # function_sets = sp.FunctionSets(function_set_file='data/kegg.txt', min_set_size=10, annotation_obj=annotations) 
     function_sets = sp.FunctionSets(function_set_file=args.function_def, min_set_size=args.min_set_size, annotation_obj=annotations)
     # check that cand and back files are correctly named.....
     try:
@@ -123,7 +125,7 @@ def main():
         single_perm_objs[j] = perm_obj
         per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, threads)
         single_per_set[j] = per_set
-        results = sp.make_results_table(test_obj, function_sets, per_set)
+        results = sp.make_results_table(test_obj, function_sets, per_set, annotations)
         single_results[j] = results
         
 

@@ -113,10 +113,10 @@ def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
     out['enrichment(log2)'] = log_e 
     out['emp_p_e'] = set_perm_obj.p_enrichment
     out['emp_p_d'] = set_perm_obj.p_depletion
-    out['fdr_e'] = sp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
-    out['fdr_d'] = sp.fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
-    out['BH_fdr_e'] = sp.p_adjust_bh(out['emp_p_e'])
-    out['BH_fdr_d'] = sp.p_adjust_bh(out['emp_p_d'])
+    out['fdr_e'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
+    out['fdr_d'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
+    out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
+    out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
     #out_genes = candidates_per_set(test_obj, function_obj, annotation_obj)
     out = pd.merge(out, test_obj.candidates_in_functions_df, on='Id', how='outer')
     out = out.sort_values('emp_p_e')
@@ -329,14 +329,6 @@ class TestObject:
         self.n_candidate_per_function = permutation_fset_intersect(
             (self.candidate_array, function_set_obj.function_array2d))
         self.candidates_in_functions_df = candidates_per_set(self.candidate_array, function_set_obj, annotation_obj)
-    # @classmethod
-    # def add_objects(cls, a_obj, b_obj):
-    #     obj = cls.__new__(cls)
-    #     obj.background_id_idx_map = None
-    #     obj.candidate_array = [a_obj.candidate_array, '||', b_obj.candidate_array]
-    #     obj.n_candidates = a_obj.n_candidates + b_obj.n_candidates
-    #     obj.n_candidate_per_function = a_obj.n_candidate_per_function + b_obj.n_candidate_per_function
-    #     return obj
     @classmethod
     def add_objects(cls, *args):
         obj = cls.__new__(cls)
