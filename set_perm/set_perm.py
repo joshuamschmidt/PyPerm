@@ -226,21 +226,14 @@ def function_sets_to_array(function_sets, min_set_size, annotation_obj):
     function_array_ids = sets.index[set_names]
     return function_array, function_array_ids
 
-# functions to combine candidate gene by function lists form two or more objects
-def make_combined_candidate_by_function_df(obj_list):
-    # ll=["; ".join(x) for x in list(zip(c_df1['Genes'].values, c_df2['Genes'].values))]
-    #combined_list=list(map(list, zip(*[join_sublist(test_object.candidates_in_functions_df) for test_object in obj_list])))
-    #collapsed_lists=["; ".join(sub_list) for sub_list in combined_list]
-    collaped_lists= ["; ".join(x) for x in list(zip([test_object.candidates_in_functions_df.['Genes'].values for test_object in obj_list]))]
-    ids=obj_list[0].candidates_in_functions_df['Id'].values
+# function to combine candidate gene by function lists form two or more objects
+def make_combined_candidate_by_function_df(df_list):
+    zip_gene_lists = list(zip(*[df['Genes'].values for df in df_list]))
+    collapsed_lists=["; ".join(g_list) for g_list in  zip_gene_lists ]
+    ids=df_list[0]['Id'].values
     combined = {'Id':ids, 'Genes': collapsed_lists}
     combined_df = pd.DataFrame(data=combined)
     return combined_df
-
-# def join_sublist(candidates_in_functions_df):
-#     array=candidates_in_functions_df['Genes'].to_numpy()
-#     out=[np.array2string(x,separator=', ') for x in array]
-#     return out
 
 # --- classes
 class AnnotationSet:
@@ -356,7 +349,7 @@ class TestObject:
         obj.candidate_array = [ obj.candidate_array[0] for obj in args ]
         obj.n_candidates = sum([ obj.n_candidates for obj in args])
         obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
-        obj.candidates_in_functions_df = make_combined_candidate_by_function_df(args)
+        obj.candidates_in_functions_df = make_combined_candidate_by_function_df([obj.candidates_in_functions_df for obj in args])
         return obj
     @classmethod
     def union_of_objects(cls, a_obj, b_obj):
