@@ -8,7 +8,10 @@ from set_perm import set_perm as sp
 import pandas as pd
 import numpy as np
 
-'''required and optional argument parser'''
+def tuple_type(strings):
+    strings = strings.replace("(", "").replace(")", "")
+    mapped_str = map(str, strings.split(","))
+    return tuple(mapped_str)
 
 parser = argparse.ArgumentParser(prog='set_perm',
                         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -38,10 +41,12 @@ optional.add_argument(
     default=argparse.SUPPRESS,
     help='show this help message and exit'
 )
-required.add_argument('--candidates', type=str, dest='c_files', nargs='+', default=[],
+'''required and optional argument parser'''
+
+required.add_argument('--candidates', type=tuple_type, dest='c_files', nargs='+',
                     help='one or more candidate snp/feature files. Must be passed as a comma sep name,file tuple')
 
-required.add_argument('--background', type=str, dest='b_files', nargs='+', default=[],
+required.add_argument('--background', type=tuple_type, dest='b_files', nargs='+',
                     help='one or more background snp/feature files. Must be passed as a comma sep name,file tuple')
 
 required.add_argument('--feature_def', type=str, dest='feature_def',
@@ -62,15 +67,14 @@ optional.add_argument('--prefix', dest='user_prefix', type=str,
                        help='Prefix identifyer for output file(s). Default: ""')
 parser.set_defaults(user_prefix="")
 
-optional.add_argument('--joint', dest='joint', type=str, nargs='+', default= [],
-                       help='a list of samples to be analysed jointly, e.g. a,b or a,b,c'. )
+optional.add_argument('--joint', dest='joint', type=tuple_type, nargs='+', default= [],
+                       help='a list of samples to be analysed jointly, e.g. a,b or a,b,c')
 
 optional.add_argument('--gene_def', dest='gene_def', type=int, default= 0,
                        help='an int to specifiy if feature defs are changed in bp. Currently modfies both start and end coordinates. Default=0')
 
 optional.add_argument('--threads', type=int, dest='threads',
                        help='multithreaded mode with int threads')
-
 
 #  sorted(annotations.annotation_table[annotations.annotation_table['Idx'].isin(test_obj.candidate_array[0])]['Annotation'].values)
 # sys.modules.pop('set_perm') 
@@ -115,8 +119,8 @@ def main():
     single_results = [None] * len(input_list)
     single_per_set = [None] * len(input_list)
 
-    n_perms=arg.n_perms
-    threads=arg_threads
+    n_perms=args.n_perms
+    threads=args.threads
     for j, i_group in enumerate(input_list):
         name, cands, bg = i_group
         single_names[j] = name
@@ -146,7 +150,7 @@ def main():
             idxs=[single_names.index(group) for group in join_group]
             joint_test_obj = sp.TestObject.add_objects(*[single_test_objs[i] for i in idxs])
             joint_per_set = sp.SetPerPerm.join_objects(*[single_per_set[i] for i in idxs])
-            joint_results = sp.make_results_table(joint_obj, function_sets, joint_per_set, annotations)
+            joint_results = sp.make_results_table(joint_test_obj, function_sets, joint_per_set, annotations)
             joint_test_results[k] = joint_results
             joint_test_names[k] = "_".join(join_group)
     # time to write results out
