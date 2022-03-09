@@ -85,7 +85,7 @@ bin/set_perm \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
---threads 10
+--threads 6
 
 bin/set_perm \
 --candidates "central,data/central-4e-05-candidate.snps.bed.gz" "eastern,data/eastern-3.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.001-candidate.snps.bed.gz" \
