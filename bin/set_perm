@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import os
+from pathlib import Path
 import sys
 import textwrap
 from set_perm import set_perm as sp
@@ -57,6 +58,10 @@ optional.add_argument('--n_perms', dest='n_perms', type=int,
                        help='Number of random permuations for p-value estimation. Default: 10,000')
 parser.set_defaults(n_perms=10000)
 
+optional.add_argument('--prefix', dest='user_prefix', type=str,
+                       help='Prefix identifyer for output file(s). Default: ""')
+parser.set_defaults(user_prefix="")
+
 optional.add_argument('--joint', dest='joint', type=str, nargs='+', default= [],
                        help='a list of samples to be analysed jointly, e.g. a,b or a,b,c'. )
 
@@ -95,6 +100,7 @@ def main():
     # annotations = sp.AnnotationSet(annotation_file='data/genes.txt', range_modification=2000)   
     # function_sets = sp.FunctionSets(function_set_file='data/kegg.txt', min_set_size=10, annotation_obj=annotations) 
     function_sets = sp.FunctionSets(function_set_file=args.function_def, min_set_size=args.min_set_size, annotation_obj=annotations)
+    function_name =  Path(args.function_def).stem
     # check that cand and back files are correctly named.....
     try:
        input_list=input_arg_checker(args.c_files, args.b_files)
@@ -128,19 +134,28 @@ def main():
         results = sp.make_results_table(test_obj, function_sets, per_set, annotations)
         single_results[j] = results
         
-
-    if(len(args.joint)>0):
-        joint_test_results = []
-        joint_test_names = []
-        for k, join_group in enumerate(args.joint):
+    joint_list=args.joint
+    # joint_list=[ ("central", "eastern"), ("central","internal"), ("eastern","internal"), ("central","eastern","internal")  ]
+    if(len(joint_list)>0):
+        joint_test_results = [None] * len(joint_list)
+        joint_test_names = [None] * len(joint_list)
+        for k, join_group in enumerate(joint_list):
+            # k=0
+            # join_group=joint_list[k]
             n_joins = len(join_group)
             idxs=[single_names.index(group) for group in join_group]
-            joint_obj = sp.TestObject.add_objects(*[single_test_objs[i] for i in idxs])
+            joint_test_obj = sp.TestObject.add_objects(*[single_test_objs[i] for i in idxs])
             joint_per_set = sp.SetPerPerm.join_objects(*[single_per_set[i] for i in idxs])
-            joint_results = make_results_table(joint_obj, function_sets, joint_per_set)
-            joint_results.sort_values('fdr_e')
-            joint_test_results.append(joint_results)
-            joint_test_names.append("_".join(join_group))
+            joint_results = sp.make_results_table(joint_obj, function_sets, joint_per_set, annotations)
+            joint_test_results[k] = joint_results
+            joint_test_names[k] = "_".join(join_group)
+    # time to write results out
+    user_prefix=args.user_prefix
+    for i, result_df in enumerate(single_results):
+        sp.results_writer(result_df, single_names[i], function_name, user_prefix)
+    if(len(joint_list)>0):
+        for i, result_df in enumerate(joint_test_results):
+            sp.results_writer(result_df, joint_test_names[i], function_name, user_prefix)
 
 if __name__ == '__main__':
     main()

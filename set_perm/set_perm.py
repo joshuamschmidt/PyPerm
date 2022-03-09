@@ -179,6 +179,14 @@ def load_variants(variant_file):
         print(f'The file: {variant_file} does not exist. Please correct and try again.')
     return pr.PyRanges(variants.drop_duplicates())
 
+# wrapper for results table writing
+def results_writer(results_df, name_str, function_name_str, user_prefix):
+    if(user_prefix==""):
+        outfile_name = name_str + "-" + function_name_str + ".set_perm.txt"
+    else:
+        outfile_name = user_prefix + "-" + name_str + "-" + function_name_str + ".set_perm.txt"
+    results_df.to_csv(path_or_buf=outfile_name, sep='\t',header=True, index=False, float_format='%.6f',mode='w+')
+    return None
 
 # global functions used in class constructors/__init__
 
@@ -220,17 +228,19 @@ def function_sets_to_array(function_sets, min_set_size, annotation_obj):
 
 # functions to combine candidate gene by function lists form two or more objects
 def make_combined_candidate_by_function_df(obj_list):
-    combined_list=list(map(list, zip(*[join_sublist(test_object.candidates_in_functions_df) for test_object in obj_list])))
-    collapsed_lists=["; ".join(sub_list) for sub_list in combined_list]
+    # ll=["; ".join(x) for x in list(zip(c_df1['Genes'].values, c_df2['Genes'].values))]
+    #combined_list=list(map(list, zip(*[join_sublist(test_object.candidates_in_functions_df) for test_object in obj_list])))
+    #collapsed_lists=["; ".join(sub_list) for sub_list in combined_list]
+    collaped_lists= ["; ".join(x) for x in list(zip([test_object.candidates_in_functions_df.['Genes'].values for test_object in obj_list]))]
     ids=obj_list[0].candidates_in_functions_df['Id'].values
     combined = {'Id':ids, 'Genes': collapsed_lists}
     combined_df = pd.DataFrame(data=combined)
     return combined_df
 
-def join_sublist(candidates_in_functions_df):
-    array=candidates_in_functions_df['Genes'].to_numpy()
-    out=[np.array2string(x,separator=', ') for x in array]
-    return out
+# def join_sublist(candidates_in_functions_df):
+#     array=candidates_in_functions_df['Genes'].to_numpy()
+#     out=[np.array2string(x,separator=', ') for x in array]
+#     return out
 
 # --- classes
 class AnnotationSet:
@@ -321,7 +331,8 @@ def n_candidates_per_set(annotation_obj, function_obj):
 def candidates_per_set(candidate_array, function_obj, annotation_obj):
     candidate_idx_in_function_set = [np.intersect1d(i, candidate_array) if len(np.intersect1d(i, candidate_array)) > 0 else np.asarray(-9) for i in function_obj.function_array2d] 
     candidate_genes_in_function_set = [np.sort(annotation_obj.annotation_table.loc[annotation_obj.annotation_table['Idx'].isin(candidate_idxs)]['Annotation'].values) if np.all(candidate_idxs!=-9)  else  np.asarray(None) for candidate_idxs in candidate_idx_in_function_set]
-    d = {'Id': function_obj.function_array2d_ids, 'Genes': candidate_genes_in_function_set}
+    candidate_genes_collapsed = [np.array2string(f_set,separator=", ", max_line_width=10e6, threshold=10e6)  for f_set in candidate_genes_in_function_set]
+    d = {'Id': function_obj.function_array2d_ids, 'Genes': candidate_genes_collapsed}
     df = pd.DataFrame(data=d)
     return df
 
