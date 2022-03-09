@@ -1,6 +1,6 @@
 #--- kegg
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-0.000192-candidate.snps.bed.gz" "eastern,data/eastern-0.000228-candidate.snps.bed.gz" "ancestral,data/ancestral-0.005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -12,7 +12,7 @@ bin/test_tuple_parse \
 --gene_def 2000 \
 --threads 10
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-4e-05-candidate.snps.bed.gz" "eastern,data/eastern-3.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.001-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -24,7 +24,7 @@ bin/test_tuple_parse \
 --gene_def 2000 \
 --threads 10
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-2e-05-candidate.snps.bed.gz" "eastern,data/eastern-1.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.0005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -37,7 +37,7 @@ bin/test_tuple_parse \
 --threads 10
 
 #--- vip
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-0.000192-candidate.snps.bed.gz" "eastern,data/eastern-0.000228-candidate.snps.bed.gz" "ancestral,data/ancestral-0.005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -49,7 +49,7 @@ bin/test_tuple_parse \
 --gene_def 2000 \
 --threads 10
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-4e-05-candidate.snps.bed.gz" "eastern,data/eastern-3.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.001-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -61,7 +61,7 @@ bin/test_tuple_parse \
 --gene_def 2000 \
 --threads 10
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-2e-05-candidate.snps.bed.gz" "eastern,data/eastern-1.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.0005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -75,7 +75,7 @@ bin/test_tuple_parse \
 
 #--- SIV
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-0.000192-candidate.snps.bed.gz" "eastern,data/eastern-0.000228-candidate.snps.bed.gz" "ancestral,data/ancestral-0.005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -87,7 +87,7 @@ bin/test_tuple_parse \
 --gene_def 2000 \
 --threads 10
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-4e-05-candidate.snps.bed.gz" "eastern,data/eastern-3.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.001-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -99,7 +99,7 @@ bin/test_tuple_parse \
 --gene_def 2000 \
 --threads 10
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-2e-05-candidate.snps.bed.gz" "eastern,data/eastern-1.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.0005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -112,7 +112,7 @@ bin/test_tuple_parse \
 --threads 10
 
 #--- SIV modules
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-0.000192-candidate.snps.bed.gz" "eastern,data/eastern-0.000228-candidate.snps.bed.gz" "ancestral,data/ancestral-0.005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -124,7 +124,7 @@ bin/test_tuple_parse \
 --gene_def 2000 \
 --threads 10
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-4e-05-candidate.snps.bed.gz" "eastern,data/eastern-3.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.001-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -136,7 +136,7 @@ bin/test_tuple_parse \
 --gene_def 2000 \
 --threads 10
 
-bin/test_tuple_parse \
+bin/set_perm \
 --candidates "central,data/central-2e-05-candidate.snps.bed.gz" "eastern,data/eastern-1.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.0005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
