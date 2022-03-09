@@ -70,6 +70,10 @@ parser.set_defaults(user_prefix="")
 optional.add_argument('--joint', dest='joint', type=tuple_type, nargs='+', default= [],
                        help='a list of samples to be analysed jointly, e.g. a,b or a,b,c')
 
+optional.add_argument('--nested', dest='nested', type=bool, nargs=1,
+                       help='candidates are nested, e.g. different -pvalue cutoffs from the same test. True or False. Note: At the momnet this is incompatible with --joint')
+parser.set_defaults(user_prefix=False)
+
 optional.add_argument('--gene_def', dest='gene_def', type=int, default= 0,
                        help='an int to specifiy if feature defs are changed in bp. Currently modfies both start and end coordinates. Default=0')
 
