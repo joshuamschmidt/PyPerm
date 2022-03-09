@@ -43,7 +43,8 @@ Go to the notebook here for an example workflow: [chimp example](/test_anlaysis.
 
 
 ## Basic usage
-``set_perm \  
+``bash
+set_perm \  
 --candidates "central,data/central-0.000192-candidate.snps.bed.gz" "eastern,data/eastern-0.000228-candidate.snps.bed.gz" "ancestral,data/ancestral-0.005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
@@ -53,7 +54,8 @@ Go to the notebook here for an example workflow: [chimp example](/test_anlaysis.
 --prefix "test" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
---threads 10``
+--threads 10
+``
 
 ### Units of analysis
 
