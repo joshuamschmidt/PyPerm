@@ -109,10 +109,10 @@ def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
     log_e = np.log2(e_array, out=np.empty((np.shape(e_array)[0],)) * np.nan, where=(e_array!=0))
     out['enrichment(log2)'] = log_e 
     out['emp_p_e'] = set_perm_obj.p_enrichment
-    out['emp_p_d'] = set_perm_obj.p_depletion
     out['fdr_e'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
-    out['fdr_d'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
     out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
+    out['emp_p_d'] = set_perm_obj.p_depletion
+    out['fdr_d'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
     out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
     #out_genes = candidates_per_set(test_obj, function_obj, annotation_obj)
     out = pd.merge(out, test_obj.candidates_in_functions_df, on='Id', how='outer')
