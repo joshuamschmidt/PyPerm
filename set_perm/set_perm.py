@@ -104,6 +104,7 @@ def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
     out = out[out['Id'].isin(function_obj.function_array2d_ids)]
     out['n_candidates'] = test_obj.n_candidate_per_function
     out['mean_n_resample'] = set_perm_obj.mean_per_set
+    out['sd_n_resample'] = set_perm_obj.sd_per_set
     e_array = np.asarray(out['n_candidates'] / out['mean_n_resample'].values)
     log_e = np.log2(e_array, out=np.empty((np.shape(e_array)[0],)) * np.nan, where=(e_array!=0))
     out['enrichment(log2)'] = log_e 
