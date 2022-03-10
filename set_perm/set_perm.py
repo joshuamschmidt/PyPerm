@@ -373,6 +373,7 @@ class SetPerPerm:
         self.set_n_per_perm = multicore_intersect(permutation_obj.permutations, function_set_obj.function_array2d, n_cores)
         self.mean_per_set = np.array(np.mean(self.set_n_per_perm, axis=0))
         self.sd_per_set = np.array(np.std(self.set_n_per_perm, axis=0))
+        self.var_per_set = np.array(np.std(self.set_n_per_perm, axis=0))
         self.p_enrichment, self.p_depletion = calculate_p_values(test_obj.n_candidate_per_function, self.set_n_per_perm)
         self.n_candidate_per_function = test_obj.n_candidate_per_function
     @classmethod
@@ -382,6 +383,7 @@ class SetPerPerm:
         obj = cls.__new__(cls)
         obj.set_n_per_perm = sum([ obj.set_n_per_perm for obj in args])
         obj.mean_per_set = sum([ obj.mean_per_set for obj in args])
+        obj.var = sum([ obj.var_per_set for obj in args])
         obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
         obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function, obj.set_n_per_perm)
         return obj
