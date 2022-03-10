@@ -6,11 +6,11 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/kegg.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
---threads 10
+--threads 6
 
 bin/set_perm \
 --candidates "central,data/central-4e-05-candidate.snps.bed.gz" "eastern,data/eastern-3.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.001-candidate.snps.bed.gz" \
@@ -18,11 +18,11 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/kegg.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.1%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
---threads 10
+--threads 6
 
 bin/set_perm \
 --candidates "central,data/central-2e-05-candidate.snps.bed.gz" "eastern,data/eastern-1.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-5e-04-candidate.snps.bed.gz" \
@@ -30,7 +30,7 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/kegg.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.05%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
@@ -43,11 +43,11 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/vip.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
---threads 10
+--threads 6
 
 bin/set_perm \
 --candidates "central,data/central-4e-05-candidate.snps.bed.gz" "eastern,data/eastern-3.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-0.001-candidate.snps.bed.gz" \
@@ -55,11 +55,11 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/vip.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.1%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
---threads 10
+--threads 6
 
 bin/set_perm \
 --candidates "central,data/central-2e-05-candidate.snps.bed.gz" "eastern,data/eastern-1.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-5e-04-candidate.snps.bed.gz" \
@@ -67,7 +67,7 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/vip.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.05%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
@@ -81,7 +81,7 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/siv.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
@@ -93,11 +93,11 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/siv.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.1%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
---threads 10
+--threads 6
 
 bin/set_perm \
 --candidates "central,data/central-2e-05-candidate.snps.bed.gz" "eastern,data/eastern-1.5e-05-candidate.snps.bed.gz" "ancestral,data/ancestral-5e-04-candidate.snps.bed.gz" \
@@ -105,11 +105,11 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/siv.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.05%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
---threads 10
+--threads 6
 
 #--- SIV modules
 bin/set_perm \
@@ -118,7 +118,7 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/siv_modules.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
@@ -130,7 +130,7 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/siv_modules.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.1%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
@@ -142,7 +142,7 @@ bin/set_perm \
 --feature_def data/genes.txt \
 --function_def data/siv_modules.txt \
 --min_set_size 10 \
---n_perms 10000 \
+--n_perms 100000 \
 --prefix "match-ancestral_0.05%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
 --gene_def 2000 \
