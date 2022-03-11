@@ -408,13 +408,20 @@ class SetPerPerm:
 # --- redundant and/or not used anymore
 
 def perm_p_matrix(perm_n_per_set, method='enrichment'):
-    n_perms, n_sets = perm_n_per_set.shape
+    if(len(perm_n_per_set.shape)>1):
+        n_perms, n_sets = perm_n_per_set.shape
+    else:
+        n_perms = perm_n_per_set.size
+        n_sets = 1
     out = np.ndarray((n_perms, n_sets), dtype='float64')
     method_int = 1
     if method == 'enrichment':
         method_int = -1
-    for i in range(n_sets):
-        out[:, i] = rankdata(method_int * perm_n_per_set[:, i], method='max') / n_perms
+    if(len(perm_n_per_set.shape)>1):
+        for i in range(n_sets):
+            out[:, i] = rankdata(method_int * perm_n_per_set[:, i], method='max') /n_perms
+    else:
+        out=rankdata(method_int * perm_n_per_set, method='max')/n_perms
     return out
 
 
