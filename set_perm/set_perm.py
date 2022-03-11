@@ -102,25 +102,25 @@ def calculate_p_values(c_set_n, p_set_n):
 def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
     out = function_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
     out = out[out['Id'].isin(function_obj.function_array2d_ids)]
-    out['n_candidates'] = test_obj.n_candidate_per_function
-    out['mean_permuation'] = set_perm_obj.mean_per_set
-    sem=set_perm_obj.sd_per_set / sqrt(set_perm_obj.n_permutations)
-    out['sem_permuation'] = sem
-    e_array = np.asarray(out['n_candidates'] / out['mean_n_resample'].values)
-    sem_array = e_array * sqrt( ( 2*sem / set_perm_obj.mean_per_set)^2 )
+    out['obs_n'] = test_obj.n_candidate_per_function
+    out['perm_mean_n'] = set_perm_obj.mean_per_set
+    sem=set_perm_obj.sd_per_set / np.sqrt(set_perm_obj.n_permutations)
+    out['perm_sem'] = sem
+    e_array = np.asarray(out['obs_n'] / out['perm_mean_n'].values)
+    sem_array = e_array * np.sqrt(np.square(2*sem/set_perm_obj.mean_per_set))
     log_e = np.log2(e_array, out=np.empty((np.shape(e_array)[0],)) * np.nan, where=(e_array!=0))
-    log_sem = np.log2(sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(sem_array!=0))
-    out['enrichment(log2)'] = log_e
-    out['enrichment(CI)'] = log_sem
-    out['emp_p_e'] = set_perm_obj.p_enrichment
-    out['fdr_e'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
-    out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
-    out['emp_p_d'] = set_perm_obj.p_depletion
-    out['fdr_d'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
-    out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
+    out['enrich(log2)'] = log_e
+    out['u_95%(CI)'] = np.log2(e_array+sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(e_array+sem_array!=0))
+    out['l_95%(CI)'] = np.log2(e_array-sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(e_array-sem_array!=0))
+    out['p_enrich'] = set_perm_obj.p_enrichment
+    out['fdr_enrich'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_enrich'], method='enrichment')
+    out['BHfdr_enrich'] = p_adjust_bh(out['p_enrich'])
+    out['p_deplete'] = set_perm_obj.p_depletion
+    out['fdr_deplete'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_deplete'], method='depletion')
+    out['BHfdr_deplete'] = p_adjust_bh(out['p_deplete'])
     #out_genes = candidates_per_set(test_obj, function_obj, annotation_obj)
     out = pd.merge(out, test_obj.candidates_in_functions_df, on='Id', how='outer')
-    out = out.sort_values('emp_p_e')
+    out = out.sort_values('fdr_enrich')
     return out
 
 
