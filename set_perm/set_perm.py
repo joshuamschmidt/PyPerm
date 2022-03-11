@@ -103,11 +103,15 @@ def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
     out = function_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
     out = out[out['Id'].isin(function_obj.function_array2d_ids)]
     out['n_candidates'] = test_obj.n_candidate_per_function
-    out['mean_n_resample'] = set_perm_obj.mean_per_set
-    out['sd_n_resample'] = set_perm_obj.sd_per_set
+    out['mean_permuation'] = set_perm_obj.mean_per_set
+    sem=set_perm_obj.sd_per_set / sqrt(set_perm_obj.n_permutations)
+    out['sem_permuation'] = sem
     e_array = np.asarray(out['n_candidates'] / out['mean_n_resample'].values)
+    sem_array = e_array * sqrt( ( 2*sem / set_perm_obj.mean_per_set)^2 )
     log_e = np.log2(e_array, out=np.empty((np.shape(e_array)[0],)) * np.nan, where=(e_array!=0))
-    out['enrichment(log2)'] = log_e 
+    log_sem = np.log2(sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(sem_array!=0))
+    out['enrichment(log2)'] = log_e
+    out['enrichment(CI)'] = log_sem
     out['emp_p_e'] = set_perm_obj.p_enrichment
     out['fdr_e'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
     out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
@@ -375,16 +379,22 @@ class SetPerPerm:
         self.sd_per_set = np.array(np.std(self.set_n_per_perm, axis=0))
         self.p_enrichment, self.p_depletion = calculate_p_values(test_obj.n_candidate_per_function, self.set_n_per_perm)
         self.n_candidate_per_function = test_obj.n_candidate_per_function
+        self.n_permutations = permutation_obj.n_permutations
     @classmethod
     def join_objects(cls, *args):
         """Return a new SetPerPerm object, equivalent to a + b.
         Used because addition is too complex for default __init__"""
         obj = cls.__new__(cls)
-        obj.set_n_per_perm = sum([ obj.set_n_per_perm for obj in args])
-        obj.mean_per_set = sum([ obj.mean_per_set for obj in args])
-        obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
-        obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function, obj.set_n_per_perm)
-        return obj
+        # objects should have same number of permutations!
+        n_perm_list= [ obj.n_permutations for obj in args ]
+        if(n_perm_list.count(n_perm_list[0]) == len(n_perm_list)):
+            obj.set_n_per_perm = sum([ obj.set_n_per_perm for obj in args])
+            obj.mean_per_set = sum([ obj.mean_per_set for obj in args])
+            obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
+            obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function, obj.set_n_per_perm)
+            return obj
+        else:
+            raise ValueError("Objects must have the same number of permutations!")
 
 
 # --- redundant and/or not used anymore
