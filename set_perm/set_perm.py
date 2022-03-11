@@ -89,14 +89,18 @@ def calculate_p_values(c_set_n, p_set_n):
     p_e = []
     p_d = []
     n_perm = p_set_n.shape[0]
-    # TODO need to handle case where there is only 1 category: means that p_set_n only has one dimension!
     if n_perm == 1:
-        p_e.append((np.size(np.where(p_set_n >= c_set_n)) + 1) / (n_perm + 1))
-        p_d.append((np.size(np.where(p_set_n <= c_set_n)) + 1) / (n_perm + 1))
+        #p_e.append((np.size(np.where(p_set_n >= c_set_n)) + 1) / (n_perm + 1))
+        #p_d.append((np.size(np.where(p_set_n <= c_set_n)) + 1) / (n_perm + 1))
+        raise ValueError("can only calculate p-val;ues if there is more than one permutation!")
     else:
-        for i in range(p_set_n.shape[1]):
-            p_e.append((np.size(np.where(p_set_n[:, i] >= c_set_n[i])) + 1) / (n_perm + 1))
-            p_d.append((np.size(np.where(p_set_n[:, i] <= c_set_n[i])) + 1) / (n_perm + 1))
+        if(len(p_set_n.shape)>1):
+            for i in range(p_set_n.shape[1]):
+                p_e.append((np.size(np.where(p_set_n[:, i] >= c_set_n[i])) + 1) / (n_perm + 1))
+                p_d.append((np.size(np.where(p_set_n[:, i] <= c_set_n[i])) + 1) / (n_perm + 1))
+        if(len(p_set_n.shape)==1):
+            p_e.append( (np.size(np.where(p_set_n >= c_set_n)) + 1) / (n_perm + 1) )
+            p_d.append( (np.size(np.where(p_set_n <= c_set_n)) + 1) / (n_perm + 1) )
     return p_e, p_d
 
 
