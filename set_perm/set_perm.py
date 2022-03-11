@@ -90,33 +90,42 @@ def calculate_p_values(c_set_n, p_set_n):
     p_d = []
     n_perm = p_set_n.shape[0]
     if n_perm == 1:
-        p_e.append((np.size(np.where(p_set_n >= c_set_n)) + 1) / (n_perm + 1))
-        p_d.append((np.size(np.where(p_set_n <= c_set_n)) + 1) / (n_perm + 1))
+        #p_e.append((np.size(np.where(p_set_n >= c_set_n)) + 1) / (n_perm + 1))
+        #p_d.append((np.size(np.where(p_set_n <= c_set_n)) + 1) / (n_perm + 1))
+        raise ValueError("can only calculate p-val;ues if there is more than one permutation!")
     else:
-        for i in range(p_set_n.shape[1]):
-            p_e.append((np.size(np.where(p_set_n[:, i] >= c_set_n[i])) + 1) / (n_perm + 1))
-            p_d.append((np.size(np.where(p_set_n[:, i] <= c_set_n[i])) + 1) / (n_perm + 1))
+        if(len(p_set_n.shape)>1):
+            for i in range(p_set_n.shape[1]):
+                p_e.append((np.size(np.where(p_set_n[:, i] >= c_set_n[i])) + 1) / (n_perm + 1))
+                p_d.append((np.size(np.where(p_set_n[:, i] <= c_set_n[i])) + 1) / (n_perm + 1))
+        if(len(p_set_n.shape)==1):
+            p_e.append( (np.size(np.where(p_set_n >= c_set_n)) + 1) / (n_perm + 1) )
+            p_d.append( (np.size(np.where(p_set_n <= c_set_n)) + 1) / (n_perm + 1) )
     return p_e, p_d
 
 
 def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
     out = function_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
     out = out[out['Id'].isin(function_obj.function_array2d_ids)]
-    out['n_candidates'] = test_obj.n_candidate_per_function
-    out['mean_n_resample'] = set_perm_obj.mean_per_set
-    out['sd_n_resample'] = set_perm_obj.sd_per_set
-    e_array = np.asarray(out['n_candidates'] / out['mean_n_resample'].values)
+    out['obs_n'] = test_obj.n_candidate_per_function
+    out['perm_mean_n'] = set_perm_obj.mean_per_set
+    sem=set_perm_obj.sd_per_set / np.sqrt(set_perm_obj.n_permutations)
+    out['perm_sem'] = sem
+    e_array = np.asarray(out['obs_n'] / out['perm_mean_n'].values)
+    sem_array = e_array * np.sqrt(np.square(2*sem/set_perm_obj.mean_per_set))
     log_e = np.log2(e_array, out=np.empty((np.shape(e_array)[0],)) * np.nan, where=(e_array!=0))
-    out['enrichment(log2)'] = log_e 
-    out['emp_p_e'] = set_perm_obj.p_enrichment
-    out['fdr_e'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_e'], method='enrichment')
-    out['BH_fdr_e'] = p_adjust_bh(out['emp_p_e'])
-    out['emp_p_d'] = set_perm_obj.p_depletion
-    out['fdr_d'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['emp_p_d'], method='depletion')
-    out['BH_fdr_d'] = p_adjust_bh(out['emp_p_d'])
+    out['enrich(log2)'] = log_e
+    out['u_95%(CI)'] = np.log2(e_array+sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(e_array+sem_array!=0))
+    out['l_95%(CI)'] = np.log2(e_array-sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(e_array-sem_array!=0))
+    out['p_enrich'] = set_perm_obj.p_enrichment
+    out['fdr_enrich'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_enrich'], method='enrichment')
+    out['BHfdr_enrich'] = p_adjust_bh(out['p_enrich'])
+    out['p_deplete'] = set_perm_obj.p_depletion
+    out['fdr_deplete'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_deplete'], method='depletion')
+    out['BHfdr_deplete'] = p_adjust_bh(out['p_deplete'])
     #out_genes = candidates_per_set(test_obj, function_obj, annotation_obj)
     out = pd.merge(out, test_obj.candidates_in_functions_df, on='Id', how='outer')
-    out = out.sort_values('emp_p_e')
+    out = out.sort_values('fdr_enrich')
     return out
 
 
@@ -377,19 +386,24 @@ class SetPerPerm:
         self.var_per_set = np.array(np.std(self.set_n_per_perm, axis=0))
         self.p_enrichment, self.p_depletion = calculate_p_values(test_obj.n_candidate_per_function, self.set_n_per_perm)
         self.n_candidate_per_function = test_obj.n_candidate_per_function
+        self.n_permutations = permutation_obj.n_permutations
     @classmethod
     def join_objects(cls, *args):
         """Return a new SetPerPerm object, equivalent to a + b.
         Used because addition is too complex for default __init__"""
         obj = cls.__new__(cls)
-        obj.set_n_per_perm = sum([ obj.set_n_per_perm for obj in args])
-        obj.mean_per_set = sum([ obj.mean_per_set for obj in args])
-        obj.var_per_set = sum([ obj.var_per_set for obj in args])
-        obj.sd_per_set = sqrt(obj.var_per_set)
-        obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
-        obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function, obj.set_n_per_perm)
-        return obj
-
+        # objects should have same number of permutations!
+        n_perm_list= [ obj.n_permutations for obj in args ]
+        if(n_perm_list.count(n_perm_list[0]) == len(n_perm_list)):
+            obj.set_n_per_perm = sum([ obj.set_n_per_perm for obj in args])
+            obj.mean_per_set = sum([ obj.mean_per_set for obj in args])
+            obj.var_per_set = sum([ obj.var_per_set for obj in args])
+            obj.sd_per_set = np.sqrt(obj.var_per_set)
+            obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
+            obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function, obj.set_n_per_perm)
+            return obj
+        else:
+            raise ValueError("Objects must have the same number of permutations!")
 
 # --- redundant and/or not used anymore
 
