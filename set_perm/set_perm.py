@@ -89,6 +89,7 @@ def calculate_p_values(c_set_n, p_set_n):
     p_e = []
     p_d = []
     n_perm = p_set_n.shape[0]
+    # TODO need to handle case where there is only 1 category: means that p_set_n only has one dimension!
     if n_perm == 1:
         p_e.append((np.size(np.where(p_set_n >= c_set_n)) + 1) / (n_perm + 1))
         p_d.append((np.size(np.where(p_set_n <= c_set_n)) + 1) / (n_perm + 1))
