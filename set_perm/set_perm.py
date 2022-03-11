@@ -385,6 +385,7 @@ class SetPerPerm:
         obj.set_n_per_perm = sum([ obj.set_n_per_perm for obj in args])
         obj.mean_per_set = sum([ obj.mean_per_set for obj in args])
         obj.var_per_set = sum([ obj.var_per_set for obj in args])
+        obj.sd_per_set = sqrt(obj.var_per_set)
         obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
         obj.p_enrichment, obj.p_depletion = calculate_p_values(obj.n_candidate_per_function, obj.set_n_per_perm)
         return obj
