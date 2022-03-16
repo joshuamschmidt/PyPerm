@@ -120,11 +120,12 @@ def main():
     single_test_objs = [None] * len(input_list)
     single_perm_objs = [None] * len(input_list)
     single_names = [None] * len(input_list)
-    single_results = [None] * len(input_list)
+    #single_results = [None] * len(input_list)
     single_per_set = [None] * len(input_list)
 
     n_perms=args.n_perms
     threads=args.threads
+    user_prefix=args.user_prefix
     for j, i_group in enumerate(input_list):
         name, cands, bg = i_group
         single_names[j] = name
@@ -140,30 +141,30 @@ def main():
         per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, threads)
         single_per_set[j] = per_set
         results = sp.make_results_table(test_obj, function_sets, per_set, annotations)
-        single_results[j] = results
+        #single_results[j] = results
+        sp.results_writer(results, name, function_name, user_prefix)
         
     joint_list=args.joint
     # joint_list=[ ("central", "eastern"), ("central","internal"), ("eastern","internal"), ("central","eastern","internal")  ]
     if(len(joint_list)>0):
-        joint_test_results = [None] * len(joint_list)
-        joint_test_names = [None] * len(joint_list)
+        #joint_test_results = [None] * len(joint_list)
+        #joint_test_names = [None] * len(joint_list)
         for k, join_group in enumerate(joint_list):
-            # k=0
-            # join_group=joint_list[k]
-            n_joins = len(join_group)
-            idxs=[single_names.index(group) for group in join_group]
+            idxs = [single_names.index(group) for group in join_group]
             joint_test_obj = sp.TestObject.add_objects(*[single_test_objs[i] for i in idxs])
             joint_per_set = sp.SetPerPerm.join_objects(*[single_per_set[i] for i in idxs])
             joint_results = sp.make_results_table(joint_test_obj, function_sets, joint_per_set, annotations)
-            joint_test_results[k] = joint_results
-            joint_test_names[k] = "_".join(join_group)
+            #joint_test_results[k] = joint_results
+            #joint_test_names[k] = "_".join(join_group)
+            joint_name = "_".join(join_group)
+            sp.results_writer(joint_results, joint_name, function_name, user_prefix)
     # time to write results out
-    user_prefix=args.user_prefix
-    for i, result_df in enumerate(single_results):
-        sp.results_writer(result_df, single_names[i], function_name, user_prefix)
-    if(len(joint_list)>0):
-        for i, result_df in enumerate(joint_test_results):
-            sp.results_writer(result_df, joint_test_names[i], function_name, user_prefix)
+    # user_prefix=args.user_prefix
+    # for i, result_df in enumerate(single_results):
+    #     sp.results_writer(result_df, single_names[i], function_name, user_prefix)
+    # if(len(joint_list)>0):
+    #     for i, result_df in enumerate(joint_test_results):
+    #         sp.results_writer(result_df, joint_test_names[i], function_name, user_prefix)
 
 if __name__ == '__main__':
     main()

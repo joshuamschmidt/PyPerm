@@ -395,6 +395,7 @@ class SetPerPerm:
         # objects should have same number of permutations!
         n_perm_list= [ obj.n_permutations for obj in args ]
         if(n_perm_list.count(n_perm_list[0]) == len(n_perm_list)):
+            obj.n_permutations=n_perm_list[0]
             obj.set_n_per_perm = sum([ obj.set_n_per_perm for obj in args])
             obj.mean_per_set = sum([ obj.mean_per_set for obj in args])
             obj.var_per_set = sum([ obj.var_per_set for obj in args])
