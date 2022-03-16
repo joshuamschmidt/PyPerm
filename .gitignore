@@ -334,4 +334,5 @@ vignettes/*.pdf
 /*_files/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,macos,pycharm,r
+*.jar
 
