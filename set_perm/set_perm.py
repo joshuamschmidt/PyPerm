@@ -125,7 +125,7 @@ def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
     out['BHfdr_deplete'] = p_adjust_bh(out['p_deplete'])
     #out_genes = candidates_per_set(test_obj, function_obj, annotation_obj)
     out = pd.merge(out, test_obj.candidates_in_functions_df, on='Id', how='outer')
-    out = out.sort_values('fdr_enrich')
+    out = out.sort_values('p_enrich')
     return out
 
 

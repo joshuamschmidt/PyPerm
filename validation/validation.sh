@@ -121,8 +121,8 @@ cd $work_dir
 ../bin/set_perm \
 --candidates "biased,rand_1k_snps.bed" \
 --background "biased,snps_lengthbiased.bed" \
---feature_def "$work_dir"/flybase_genes_setperm.txt \
---function_def "$work_dir"/association_gominer_setperm.txt \
+--feature_def flybase_genes_setperm.txt \
+--function_def association_gominer_setperm.txt \
 --min_set_size 3 \
 --n_perms 1000000 \
 --prefix "biased" \
