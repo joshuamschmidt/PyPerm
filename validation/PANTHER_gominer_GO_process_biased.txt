@@ -1,0 +1,83 @@
+
+
+
+
+
+Analysis Type:	PANTHER Overrepresentation Test (Released 20220202)
+Annotation Version and Release Date:	GO Ontology database DOI:  10.5281/zenodo.5725227 Released 2020-11-01
+Analyzed List:	fbgn_totest_biased.txt (Drosophila melanogaster)
+Reference List:	fbgn_total.txt (Drosophila melanogaster)
+Test Type:	FISHER
+Correction:	FDR
+GO biological process complete	fbgn_total.txt - REFLIST (6781)	fbgn_totest_biased.txt (784)	fbgn_totest_biased.txt (expected)	fbgn_totest_biased.txt (over/under)	fbgn_totest_biased.txt (fold Enrichment)	fbgn_totest_biased.txt (raw P-value)	fbgn_totest_biased.txt (FDR)
+developmental cell growth (GO:0048588)	32	16	3.70	+	4.32	1.41E-05	3.86E-03
+regulation of photoreceptor cell differentiation (GO:0046532)	28	13	3.24	+	4.02	1.61E-04	2.16E-02
+regulation of neuron differentiation (GO:0045664)	45	18	5.20	+	3.46	4.47E-05	9.57E-03
+cell growth (GO:0016049)	49	18	5.67	+	3.18	1.08E-04	1.73E-02
+modulation of chemical synaptic transmission (GO:0050804)	78	23	9.02	+	2.55	2.18E-04	2.67E-02
+regulation of trans-synaptic signaling (GO:0099177)	78	23	9.02	+	2.55	2.18E-04	2.62E-02
+growth (GO:0040007)	113	30	13.06	+	2.30	1.39E-04	2.02E-02
+developmental growth (GO:0048589)	113	30	13.06	+	2.30	1.39E-04	1.98E-02
+supramolecular fiber organization (GO:0097435)	117	31	13.53	+	2.29	1.07E-04	1.74E-02
+actin cytoskeleton organization (GO:0030036)	152	38	17.57	+	2.16	5.49E-05	1.08E-02
+regulation of synapse structure or activity (GO:0050803)	120	30	13.87	+	2.16	3.52E-04	3.83E-02
+regulation of cell differentiation (GO:0045595)	178	43	20.58	+	2.09	4.17E-05	9.22E-03
+actin filament-based process (GO:0030029)	162	38	18.73	+	2.03	2.15E-04	2.68E-02
+eye development (GO:0001654)	235	51	27.17	+	1.88	9.61E-05	1.73E-02
+visual system development (GO:0150063)	235	51	27.17	+	1.88	9.61E-05	1.69E-02
+sensory system development (GO:0048880)	235	51	27.17	+	1.88	9.61E-05	1.65E-02
+compound eye development (GO:0048749)	222	48	25.67	+	1.87	1.49E-04	2.09E-02
+cytoskeleton organization (GO:0007010)	324	70	37.46	+	1.87	5.38E-06	1.84E-03
+regulation of developmental process (GO:0050793)	432	89	49.95	+	1.78	1.07E-06	4.89E-04
+cellular component morphogenesis (GO:0032989)	345	70	39.89	+	1.75	2.97E-05	7.27E-03
+negative regulation of nitrogen compound metabolic process (GO:0051172)	324	64	37.46	+	1.71	1.49E-04	2.05E-02
+regulation of multicellular organismal process (GO:0051239)	380	72	43.93	+	1.64	1.67E-04	2.20E-02
+negative regulation of cellular metabolic process (GO:0031324)	365	69	42.20	+	1.64	2.40E-04	2.84E-02
+oogenesis (GO:0048477)	348	65	40.23	+	1.62	4.62E-04	4.46E-02
+regulation of cell communication (GO:0010646)	543	101	62.78	+	1.61	1.35E-05	4.20E-03
+regulation of signaling (GO:0023051)	543	101	62.78	+	1.61	1.35E-05	4.02E-03
+regulation of cellular component organization (GO:0051128)	395	73	45.67	+	1.60	2.92E-04	3.29E-02
+tissue development (GO:0009888)	645	119	74.57	+	1.60	2.34E-06	8.93E-04
+locomotion (GO:0040011)	381	70	44.05	+	1.59	4.30E-04	4.28E-02
+epithelium development (GO:0060429)	596	109	68.91	+	1.58	9.31E-06	3.04E-03
+negative regulation of cellular process (GO:0048523)	759	138	87.75	+	1.57	6.14E-07	3.24E-04
+germ cell development (GO:0007281)	419	76	48.44	+	1.57	3.23E-04	3.57E-02
+movement of cell or subcellular component (GO:0006928)	414	75	47.87	+	1.57	3.93E-04	3.96E-02
+animal organ development (GO:0048513)	752	136	86.94	+	1.56	1.01E-06	4.94E-04
+neurogenesis (GO:0022008)	548	99	63.36	+	1.56	4.73E-05	9.83E-03
+negative regulation of biological process (GO:0048519)	882	159	101.97	+	1.56	9.43E-08	9.24E-05
+generation of neurons (GO:0048699)	516	93	59.66	+	1.56	9.50E-05	1.76E-02
+anatomical structure morphogenesis (GO:0009653)	929	166	107.41	+	1.55	7.28E-08	8.32E-05
+cell development (GO:0048468)	781	139	90.30	+	1.54	1.51E-06	6.46E-04
+regulation of signal transduction (GO:0009966)	472	84	54.57	+	1.54	2.84E-04	3.24E-02
+system development (GO:0048731)	1041	185	120.36	+	1.54	1.51E-08	2.59E-05
+developmental process involved in reproduction (GO:0003006)	535	95	61.86	+	1.54	1.22E-04	1.82E-02
+negative regulation of metabolic process (GO:0009892)	463	82	53.53	+	1.53	4.34E-04	4.25E-02
+animal organ morphogenesis (GO:0009887)	475	84	54.92	+	1.53	3.85E-04	4.00E-02
+nervous system development (GO:0007399)	646	114	74.69	+	1.53	2.44E-05	6.43E-03
+gamete generation (GO:0007276)	539	93	62.32	+	1.49	3.71E-04	3.91E-02
+cell differentiation (GO:0030154)	986	170	114.00	+	1.49	4.38E-07	2.73E-04
+multicellular organismal reproductive process (GO:0048609)	627	108	72.49	+	1.49	9.84E-05	1.65E-02
+cellular developmental process (GO:0048869)	993	171	114.81	+	1.49	4.65E-07	2.66E-04
+multi-organism reproductive process (GO:0044703)	633	108	73.19	+	1.48	1.71E-04	2.21E-02
+sexual reproduction (GO:0019953)	633	108	73.19	+	1.48	1.71E-04	2.17E-02
+regulation of response to stimulus (GO:0048583)	591	100	68.33	+	1.46	3.87E-04	3.96E-02
+organelle organization (GO:0006996)	904	148	104.52	+	1.42	4.15E-05	9.48E-03
+reproductive process (GO:0022414)	716	117	82.78	+	1.41	3.66E-04	3.92E-02
+multicellular organism development (GO:0007275)	1436	233	166.03	+	1.40	1.20E-07	1.03E-04
+positive regulation of biological process (GO:0048518)	1008	163	116.54	+	1.40	2.86E-05	7.27E-03
+positive regulation of cellular process (GO:0048522)	922	149	106.60	+	1.40	7.46E-05	1.42E-02
+regulation of gene expression (GO:0010468)	961	153	111.11	+	1.38	1.22E-04	1.85E-02
+regulation of primary metabolic process (GO:0080090)	1068	169	123.48	+	1.37	5.41E-05	1.09E-02
+anatomical structure development (GO:0048856)	1627	257	188.11	+	1.37	1.54E-07	1.17E-04
+regulation of metabolic process (GO:0019222)	1274	200	147.30	+	1.36	1.39E-05	3.97E-03
+developmental process (GO:0032502)	1699	266	196.43	+	1.35	1.79E-07	1.23E-04
+regulation of nitrogen compound metabolic process (GO:0051171)	1054	165	121.86	+	1.35	1.16E-04	1.81E-02
+regulation of macromolecule metabolic process (GO:0060255)	1189	186	137.47	+	1.35	3.81E-05	9.01E-03
+cellular component organization (GO:0016043)	1426	223	164.87	+	1.35	3.74E-06	1.35E-03
+regulation of cellular process (GO:0050794)	2163	338	250.08	+	1.35	5.80E-10	1.32E-06
+cellular component organization or biogenesis (GO:0071840)	1506	235	174.12	+	1.35	1.92E-06	7.76E-04
+regulation of biological process (GO:0050789)	2332	363	269.62	+	1.35	9.00E-11	6.17E-07
+biological regulation (GO:0065007)	2596	394	300.14	+	1.31	1.33E-10	4.55E-07
+multicellular organismal process (GO:0032501)	2128	297	246.03	+	1.21	2.72E-04	3.16E-02
+cellular process (GO:0009987)	4227	565	488.71	+	1.16	6.11E-08	8.38E-05
