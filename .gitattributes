@@ -3,4 +3,5 @@ data/* linguist-vendored
 *.html linguist-vendored
 *.ipynb linguist-vendored
 *.py linguist-vendored=false
-*.R linguist-vendored=false
+*.R linguist-vendored
+*.sh linguist-vendored
