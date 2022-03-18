@@ -263,6 +263,7 @@ class FunctionSets:
     def __init__(self, function_set_file='', min_set_size=0, annotation_obj=None):
         self.function_set_file = function_set_file
         self.min_set_size = min_set_size
+        self.n_genes_with_variant = None
         self.function_sets = load_function_sets(self.function_set_file)
         self.function_array2d, self.function_array2d_ids = function_sets_to_array(self.function_sets,
         self.min_set_size,
@@ -275,6 +276,15 @@ class FunctionSets:
         self.min_set_size,
         annotation_obj)
         self.n_per_set = np.asarray([np.size(np.where(function_array != 0)) for function_array in self.function_array2d], dtype='uint16')
+    @classmethod
+    def background_refined(cls, base_fs_obj, annotation_obj, variant_obj):
+        obj = cls.__new__(cls)
+        obj.function_set_file = base_fs_obj.function_set_file
+        obj.min_set_size = base_fs_obj.min_set_size
+        obj.n_genes_with_variant = np.size(np.unique(variant_obj.annotated_variants['Idx'].values))
+        obj.function_sets = base_fs_obj.function_sets
+        return obj
+
 
 
 class Variants:
