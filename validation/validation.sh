@@ -27,10 +27,10 @@ java -Xmx4g -jar /mnt/c/Users/jschmi06/Downloads/Gowinda-1.12.jar \
 --candidate-snp-file "$work_dir"/rand_snps_1k.txt \
 --gene-set-file "$gowinda_v"/association_gominer.txt \
 --annotation-file "$gowinda_v"/Flybase.gtf \
---simulations 1000000 \
+--simulations 100000 \
 --min-significance 1 \
 --gene-definition exon \
---threads 8 \
+--threads 6 \
 --output-file "$work_dir"/gowinda_res.txt \
 --mode gene \
 --min-genes 5
@@ -61,10 +61,10 @@ java -Xmx4g -jar /mnt/c/Users/jschmi06/Downloads/Gowinda-1.12.jar \
 --candidate-snp-file "$work_dir"/rand_1k_snps.txt \
 --gene-set-file "$gowinda_v"/association_gominer.txt \
 --annotation-file "$gowinda_v"/Flybase.gtf \
---simulations 1000000 \
+--simulations 100000 \
 --min-significance 1 \
 --gene-definition exon \
---threads 8 \
+--threads 6 \
 --output-file "$work_dir"/gowinda_res_biased.txt \
 --mode gene \
 --min-genes 5
@@ -91,6 +91,11 @@ done < "$gowinda_v"/association_gominer.txt;
 awk 'BEGIN{OFS="\t"; print "chr", "start", "end", "gene";} {if(NR >1 && $2!="-") print $2"\t"$3"\t"$4"\t"$1}' "$work_dir"/FlyBase_Fields_download.txt \
 > "$work_dir"/flybase_genes_setperm.txt
 
+#---- I think these gene defs are too different to the GOWINDA rovided flybase gtf. Plus the mists of time and
+# flybase upgrades....
+# easier to use the gowinda GTF and convert it to set-perm format.
+# take start of first exon to end of last exon as gene definiton.
+
 # SNPs chr start end
 awk 'BEGIN{OFS="\t"; print "chr", "start", "end";} {print $1"\t"$2-1"\t"$2}' "$work_dir"/rand_1k_snps.txt \
 > "$work_dir"/rand_1k_snps.bed
@@ -112,19 +117,19 @@ cd $work_dir
 --background "unbiased,snps_5pgene.bed" \
 --feature_def "$work_dir"/flybase_genes_setperm.txt \
 --function_def "$work_dir"/association_gominer_setperm.txt \
---min_set_size 3 \
---n_perms 1000000 \
+--min_set_size 5 \
+--n_perms 100000 \
 --prefix "unbiased" \
 --gene_def 2000 \
---threads 10
+--threads 6
 
 ../bin/set_perm \
 --candidates "biased,rand_1k_snps.bed" \
 --background "biased,snps_lengthbiased.bed" \
 --feature_def flybase_genes_setperm.txt \
 --function_def association_gominer_setperm.txt \
---min_set_size 3 \
---n_perms 1000000 \
+--min_set_size 5 \
+--n_perms 100000 \
 --prefix "biased" \
 --gene_def 2000 \
---threads 10
+--threads 6
