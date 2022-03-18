@@ -207,7 +207,7 @@ def load_annotation_table(annotation_file):
         names=['Chromosome', "Start", "End", "Annotation"],
         dtype={"Chromosome": str, "Start": int, "End": int, "Annotation": str}
     )
-    annotation_table['Idx'] = np.arange(len(annotation_table))
+    annotation_table['Idx'] = np.arange(len(annotation_table))+1
     return annotation_table
 
 
