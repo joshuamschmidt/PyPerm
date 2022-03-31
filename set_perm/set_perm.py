@@ -195,7 +195,7 @@ def results_writer(results_df, name_str, function_name_str, user_prefix):
         outfile_name = name_str + "-" + function_name_str + ".set_perm.txt"
     else:
         outfile_name = user_prefix + "-" + name_str + "-" + function_name_str + ".set_perm.txt"
-    results_df.to_csv(path_or_buf=outfile_name, sep='\t',header=True, index=False, float_format='%.6f',mode='w+')
+    results_df.to_csv(path_or_buf=outfile_name, sep='\t',header=True, index=False, float_format='%.8f',mode='w+')
     return None
 
 # global functions used in class constructors/__init__
