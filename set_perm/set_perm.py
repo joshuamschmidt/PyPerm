@@ -384,6 +384,15 @@ class Permutation:
     def __init__(self, test_obj, n_permutations, n_cores):
         self.n_permutations = n_permutations
         self.permutations = multicore_resample(test_obj.n_candidates, self.n_permutations, n_cores, test_obj.background_id_idx_map)
+        @classmethod
+        def sub_list_split(cls, perm_obj, n_genes):
+            """Return a new Permutation object, taking the first n_genes
+            from each permutation"""
+            obj = cls.__new__(cls)
+            obj.n_permutations = perm_obj.n_permutations
+            obj.permutations = perm_obj.permutations[:,:n_genes]
+            return obj
+
 
 
 class SetPerPerm:
