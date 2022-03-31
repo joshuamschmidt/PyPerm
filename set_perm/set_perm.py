@@ -57,7 +57,7 @@ def array_of_resamples_tup(args):
     feature_list, n_total, n_reps = args[0], args[1], args[2]
     out = np.ndarray((n_reps, n_total), dtype='uint16')
     for i in range(n_reps):
-        out[i] = sample_from_feature_list(feature_list, n_total)
+        out[i] = sample_from_feature_list(feature_list, n_total, 1.4)
     return out
 
 
@@ -439,7 +439,7 @@ def perm_p_matrix(perm_n_per_set, method='enrichment'):
 def array_of_resamples(feature_list, n_total, n_reps):
     out = np.ndarray((n_reps, n_total), dtype='uint16')
     for i in range(n_reps):
-        out[i] = sample_from_feature_list(feature_list, n_total)
+        out[i] = sample_from_feature_list(feature_list, n_total, 1.4)
     return out
 
 
