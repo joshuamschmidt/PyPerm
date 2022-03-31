@@ -78,8 +78,8 @@ optional.add_argument('--threads', type=int, dest='threads',
 
 #  sorted(annotations.annotation_table[annotations.annotation_table['Idx'].isin(test_obj.candidate_array[0])]['Annotation'].values)
 # sys.modules.pop('set_perm') 
-#  input_list=[('central', 'data/central-0.000192-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('eastern', 'data/eastern-0.000228-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('internal', 'data/ancestral-0.005-candidate.snps.bed.gz', 'data/ancestral-bg.bed.gz')] 
-
+#  c_files = [ ('cut_2','data/central-2e-05-candidate.snps.bed.gz'), ('cut_1','data/central-0.000192-candidate.snps.bed') , ('cut_3','data/central-4e-05-candidate.snps.bed.gz')  ]
+# b_file='data/pbsnj-bg.snps.bed.gz'
 
 def main():
     args = parser.parse_args()
@@ -93,6 +93,7 @@ def main():
     # begin
     nested_cand_objs = [None] * len(c_files)
     nested_names = [None] * len(c_files)
+    n_genes_per_list = [None] * len(c_files)
     n_cand_lists = len(c_files)
     n_perms=args.n_perms
     threads=args.threads
@@ -106,12 +107,22 @@ def main():
         cand_variants = sp.Variants(variant_file=cands)
         cand_variants.annotate_variants(annotation_obj=annotations)
         nested_cand_objs[j]=cand_variants
+        n_genes_per_list[j]=len(sp.get_idx_array(cand_variants.annotated_variants)[0])
 
-    # now need to check that a: the first cand object is biggest,
-    # and b, that the subsequent ones are a subset of the biggest.
+    # now need to check that a: which cand object is biggest,
+    # and b, that the other ones are a subset of the biggest.
     n_cand_variants_list = [obj.num_variants for obj in nested_cand_objs]
     index_by_list_size=[i[0] for i in sorted(enumerate(n_cand_variants_list), key=lambda k: k[1], reverse=True)]
-    #
+    # c
+    biggest=index_by_list_size[0]
+    for i in range(1, len(index_by_list_size), 1):
+        this_idx=index_by_list_size[i]
+        if not nested_cand_objs[this_idx].is_subset_of(nested_cand_objs[biggest]):
+            raise ValueError("candidates must be nested!")
+
+    # should proably have a check that each nested list is unique size. and that
+    # all smaller lists are subsets of all larger ones?
+
     test_obj = sp.TestObject(nested_cand_objs[index_by_list_size[0]], bg_variants, function_sets, annotations, n_cores = threads)
     perm_obj = sp.Permutation(test_obj, n_perms, threads)
     # now have to split perms into smaller subsets>
