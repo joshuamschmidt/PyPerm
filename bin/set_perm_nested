@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+import argparse
+import os
+from pathlib import Path
+import sys
+import textwrap
+from set_perm import set_perm as sp
+import pandas as pd
+import numpy as np
+
+def tuple_type(strings):
+    strings = strings.replace("(", "").replace(")", "")
+    mapped_str = map(str, strings.split(","))
+    return tuple(mapped_str)
+
+
+parser = argparse.ArgumentParser(prog='set_perm',
+                        formatter_class=argparse.RawDescriptionHelpFormatter,
+                        description=textwrap.dedent('''\
+                        Simple Gene Set enrichment test
+                        --------------------------------------------
+                        Generates a gene set enrichment test report file
+                        for each input file/background sets.
+                        
+                        NOTES:
+                        Number of background files must much number of candidate files.
+                        Candidate SNP/Fatures must be a subset of background files.
+
+                        !!!!!Python needs to be >=3.9!!!!!!
+                        '''),
+                        add_help=False,
+                        epilog="Questions, bugs etc?\njoshmschmidt1@gmail.com\ngithub.com/joshuamschmidt")
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+optional = parser.add_argument_group('optional arguments')
+
+# Add back help 
+optional.add_argument(
+    '-h',
+    '--help',
+    action='help',
+    default=argparse.SUPPRESS,
+    help='show this help message and exit'
+)
+'''required and optional argument parser'''
+
+required.add_argument('--candidates', type=tuple_type, dest='c_files', nargs='+',
+                    help='one or more candidate snp/feature files. Must be passed as a comma sep name,file tuple')
+
+required.add_argument('--background', type=str, dest='b_file', nargs=1,
+                    help='background snp/feature file')
+
+required.add_argument('--feature_def', type=str, dest='feature_def',
+                    help='file that defines features e.g. genes: chr start stop name')
+
+required.add_argument('--function_def', type=str, dest='function_def',
+                    help='file that defines function sets')
+
+optional.add_argument('--min_set_size', dest='min_set_size', type=int,
+                       help='set minium number of genes required in feature set. Default: 10')
+parser.set_defaults(min_set_size=10)
+
+optional.add_argument('--n_perms', dest='n_perms', type=int,
+                       help='Number of random permuations for p-value estimation. Default: 10,000')
+parser.set_defaults(n_perms=10000)
+
+optional.add_argument('--prefix', dest='user_prefix', type=str,
+                       help='Prefix identifyer for output file(s). Default: ""')
+parser.set_defaults(user_prefix="")
+
+parser.set_defaults(user_prefix=False)
+
+optional.add_argument('--gene_def', dest='gene_def', type=int, default= 0,
+                       help='an int to specifiy if feature defs are changed in bp. Currently modfies both start and end coordinates. Default=0')
+
+optional.add_argument('--threads', type=int, dest='threads',
+                       help='multithreaded mode with int threads')
+
+#  sorted(annotations.annotation_table[annotations.annotation_table['Idx'].isin(test_obj.candidate_array[0])]['Annotation'].values)
+# sys.modules.pop('set_perm') 
+#  input_list=[('central', 'data/central-0.000192-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('eastern', 'data/eastern-0.000228-candidate.snps.bed.gz', 'data/pbsnj-bg.snps.bed.gz'), ('internal', 'data/ancestral-0.005-candidate.snps.bed.gz', 'data/ancestral-bg.bed.gz')] 
+
+
+def main():
+    args = parser.parse_args()
+    annotations = sp.AnnotationSet(annotation_file=args.feature_def, range_modification=args.gene_def)
+    # annotations = sp.AnnotationSet(annotation_file='data/genes.txt', range_modification=2000)   
+    # function_sets = sp.FunctionSets(function_set_file='data/kegg.txt', min_set_size=10, annotation_obj=annotations) 
+    function_sets = sp.FunctionSets(function_set_file=args.function_def, min_set_size=args.min_set_size, annotation_obj=annotations)
+    function_name =  Path(args.function_def).stem
+    # check that cand and back files are correctly named.....
+
+    # begin
+    nested_cand_objs = [None] * len(c_files)
+    nested_names = [None] * len(c_files)
+    n_cand_lists = len(c_files)
+    n_perms=args.n_perms
+    threads=args.threads
+    user_prefix=args.user_prefix
+    bg_variants =  sp.Variants(variant_file=bg)
+    bg_variants.annotate_variants(annotation_obj=annotations)
+
+    for j, c_file in enumerate(c_files):
+        name, cands = c_file
+        nested_names[j] = name
+        cand_variants = sp.Variants(variant_file=cands)
+        cand_variants.annotate_variants(annotation_obj=annotations)
+        nested_cand_objs[j]=cand_variants
+
+    # now need to check that a: the first cand object is biggest,
+    # and b, that the subsequent ones are a subset of the biggest.
+    n_cand_variants_list = [obj.num_variants for obj in nested_cand_objs]
+    index_by_list_size=[i[0] for i in sorted(enumerate(n_cand_variants_list), key=lambda k: k[1], reverse=True)]
+    #
+    test_obj = sp.TestObject(nested_cand_objs[index_by_list_size[0]], bg_variants, function_sets, annotations, n_cores = threads)
+    perm_obj = sp.Permutation(test_obj, n_perms, threads)
+    # now have to split perms into smaller subsets>
+        per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, threads)
+        single_per_set[j] = per_set
+        results = sp.make_results_table(test_obj, function_sets, per_set, annotations)
+        #single_results[j] = results
+        sp.results_writer(results, name, function_name, user_prefix)
+        
+
+if __name__ == '__main__':
+    main()

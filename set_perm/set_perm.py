@@ -473,13 +473,3 @@ def contiguous_feature_coordinates(feature_table):
             columns=['Chromosome', 'Start', "End", "idx"])
         out_df = pd.concat([out_df, c_df])
     return out_df
-
-
-
-
-
-
-
-
-
-
