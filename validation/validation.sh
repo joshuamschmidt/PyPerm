@@ -4,7 +4,8 @@ conda create -n python2 python=2.7 bedtools
 conda activate python2
 gowinda_v='/mnt/c/Users/jschmi06/Downloads/validation_files/validation_files'
 work_dir='/mnt/c/Users/jschmi06/Documents/Projects/set_perm/validation'
-
+# gowinda_v='/Users/joshuaschmidt/Downloads/validation_files/
+# work_dir="/Users/joshuaschmidt/Projects/set_perm/validation"
 python "$gowinda_v"/scripts/get_nonoverlapping_geneids.py --gtf "$gowinda_v"/Flybase.gtf \
 > "$work_dir"/nonoverlapping_genes.txt
 
@@ -26,7 +27,7 @@ java -Xmx4g -jar /mnt/c/Users/jschmi06/Downloads/Gowinda-1.12.jar \
 --snp-file "$work_dir"/snps_5pgene.txt  \
 --candidate-snp-file "$work_dir"/rand_snps_1k.txt \
 --gene-set-file "$gowinda_v"/association_gominer.txt \
---annotation-file "$gowinda_v"/Flybase.gtf \
+--annotation-file "$work_dir"/flybase_genes.gtf \
 --simulations 100000 \
 --min-significance 1 \
 --gene-definition exon \
@@ -120,7 +121,7 @@ cd $work_dir
 --min_set_size 5 \
 --n_perms 100000 \
 --prefix "unbiased" \
---gene_def 2000 \
+--gene_def 0 \
 --threads 6
 
 ../bin/set_perm \
@@ -131,5 +132,5 @@ cd $work_dir
 --min_set_size 5 \
 --n_perms 100000 \
 --prefix "biased" \
---gene_def 2000 \
+--gene_def 0 \
 --threads 6

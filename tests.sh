@@ -5,7 +5,7 @@ bin/set_perm \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
 --function_def data/kegg.txt \
---min_set_size 10 \
+--min_set_size 3 \
 --n_perms 100000 \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
@@ -41,8 +41,8 @@ bin/set_perm \
 --candidates "central,data/central-0.000192-candidate.snps.bed.gz" "eastern,data/eastern-0.000228-candidate.snps.bed.gz" "ancestral,data/ancestral-0.005-candidate.snps.bed.gz" \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
---function_def data/vip.txt \
---min_set_size 10 \
+--function_def data/all_vips.txt \
+--min_set_size 3 \
 --n_perms 100000 \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
@@ -80,7 +80,7 @@ bin/set_perm \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
 --function_def data/siv.txt \
---min_set_size 10 \
+--min_set_size 3 \
 --n_perms 100000 \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
@@ -117,7 +117,7 @@ bin/set_perm \
 --background "central,data/pbsnj-bg.snps.bed.gz" "eastern,data/pbsnj-bg.snps.bed.gz" "ancestral,data/ancestral-bg.bed.gz" \
 --feature_def data/genes.txt \
 --function_def data/siv_modules.txt \
---min_set_size 10 \
+--min_set_size 3 \
 --n_perms 100000 \
 --prefix "match-ancestral_0.5%" \
 --joint "central,eastern" "central,ancestral" "eastern,ancestral" "central,eastern,ancestral" \
