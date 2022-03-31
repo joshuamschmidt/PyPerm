@@ -49,7 +49,7 @@ def sample_from_feature_list(feature_list, n_total):
         out = np.append(out, pd.unique([item for sublist in sample(feature_list, n_total) for item in sublist]))
         out = pd.unique(out)
     out = out[:n_total]
-    out = np.sort(out)
+    #out = np.sort(out)
     return out.astype('uint16')
 
 
