@@ -43,8 +43,8 @@ def annotation_sets_to_array(annotation, features, min_size=3):
     return set_array, set_names
 
 
-def sample_from_feature_list(feature_list, n_total):
-    out = pd.unique([item for sublist in sample(feature_list, n_total) for item in sublist])
+def sample_from_feature_list(feature_list, n_total, sample_ratio):
+    out = pd.unique([item for sublist in sample(feature_list, int(round(n_total*sample_ratio,0))) for item in sublist])
     while len(out) < n_total:
         out = np.append(out, pd.unique([item for sublist in sample(feature_list, n_total) for item in sublist]))
         out = pd.unique(out)
@@ -473,3 +473,13 @@ def contiguous_feature_coordinates(feature_table):
             columns=['Chromosome', 'Start', "End", "idx"])
         out_df = pd.concat([out_df, c_df])
     return out_df
+
+
+
+
+
+
+
+
+
+
