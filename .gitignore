@@ -336,3 +336,7 @@ vignettes/*.pdf
 # End of https://www.toptal.com/developers/gitignore/api/python,macos,pycharm,r
 *.jar
 
+./.git/objects/61/425a63680e8a5faccdaadbc8932189024fdc22
+./.git/objects/pack/pack-267d93b418dec7b5c3b4f5edf40b4ffffba9aa53.pack
+./data/pbsnj-bg.bed
+./data/pbsnj-bg.gowinda.txt
