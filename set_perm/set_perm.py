@@ -13,13 +13,11 @@ def permutation_fset_intersect(args):
     permutation_array = args[0]
     function_array = args[1]
     max_z = max(permutation_array.max(), function_array.max()) + 1
-
     def csr_sparse(a, z):
         m, n = a.shape
         indptr = np.arange(0, m * n + 1, n)
         data = np.ones(m * n, dtype=np.uint16)
         return csr_matrix((data, a.ravel(), indptr), shape=(m, z))
-
     intersection = csr_sparse(permutation_array, max_z) * csr_sparse(function_array, max_z).T
     intersection = intersection.todense()
     return np.squeeze(np.asarray(intersection))
@@ -128,6 +126,52 @@ def make_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
     out = out.sort_values('p_enrich')
     return out
 
+
+def make_nested_results_table(test_obj, function_obj, set_perm_obj, annotation_obj):
+    out = function_obj.function_sets.groupby('Id', as_index=False).agg({'FunctionName': pd.Series.unique})
+    out = out[out['Id'].isin(function_obj.function_array2d_ids)]
+    out['obs_n'] = test_obj.n_candidate_per_function
+    out['perm_mean_n'] = set_perm_obj.mean_per_set
+    sem=set_perm_obj.sd_per_set / np.sqrt(set_perm_obj.n_permutations)
+    out['perm_sem'] = sem
+    e_array = np.asarray(out['obs_n'] / out['perm_mean_n'].values)
+    sem_array = e_array * np.sqrt(np.square(2*sem/set_perm_obj.mean_per_set))
+    log_e = np.log2(e_array, out=np.empty((np.shape(e_array)[0],)) * np.nan, where=(e_array!=0))
+    out['enrich(log2)'] = log_e
+    #out['u_95%(CI)'] = np.log2(e_array+sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(e_array+sem_array!=0))
+    #out['l_95%(CI)'] = np.log2(e_array-sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(e_array-sem_array!=0))
+    out['p_enrich'] = set_perm_obj.p_enrichment
+    #out['fdr_enrich'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_enrich'], method='enrichment')
+    #out['BHfdr_enrich'] = p_adjust_bh(out['p_enrich'])
+    out['p_deplete'] = set_perm_obj.p_depletion
+    #out['fdr_deplete'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_deplete'], method='depletion')
+    #out['BHfdr_deplete'] = p_adjust_bh(out['p_deplete'])
+    #out_genes = candidates_per_set(test_obj, function_obj, annotation_obj)
+    out = pd.merge(out, test_obj.candidates_in_functions_df, on='Id', how='outer')
+    return out
+
+
+
+def combine_nested_results_table(results_list, per_set_list, nested_names, index_by_list_size, ):
+    mod_tables = [None] * len(c_files)
+    set_n_per_perm_list = [None] * len(c_files)
+    for i, size_index in enumerate(index_by_list_size):
+        this_name=nested_names[size_index]
+        this_table=results_list[i]
+        this_table['Label']=this_name
+        mod_tables[i]=this_table
+        this_per_set=per_set_list[i]
+        set_n_per_perm_list[i]=this_per_set.set_n_per_perm
+
+    merged_results=pd.concat(mod_tables)
+    merged_set_n_per_perm=np.concatenate(set_n_per_perm_list, axis=0)
+    merged_results['fdr_enrich'] = fdr_from_p_matrix(merged_set_n_per_perm, merged_results['p_enrich'], method='enrichment')
+    merged_results['BHfdr_enrich'] = p_adjust_bh(merged_results['p_enrich'])
+    merged_results['fdr_deplete'] = fdr_from_p_matrix(merged_set_n_per_perm, merged_results['p_deplete'], method='depletion')
+    merged_results['BHfdr_deplete'] = p_adjust_bh(merged_results['p_deplete'])
+    # reorganiase col order
+    merged_results=merged_results[['Label','Id','FunctionName','obs_n','perm_mean_n','enrich(log2)','p_enrich','fdr_enrich','BHfdr_enrich','p_deplete','fdr_deplete','BHfdr_deplete','Genes']]
+    merged_results = merged_results.sort_values('p_enrich')
 
 
 def fdr_from_p_matrix(perm_n_per_set, obs_p, method='enrichment'):
@@ -370,6 +414,16 @@ class TestObject:
         obj.n_candidates = sum([ obj.n_candidates for obj in args])
         obj.n_candidate_per_function = sum([ obj.n_candidate_per_function for obj in args])
         obj.candidates_in_functions_df = make_combined_candidate_by_function_df([obj.candidates_in_functions_df for obj in args])
+        return obj
+    @classmethod
+    def nested_test(cls, cand_obj, function_set_obj, annotation_obj):
+        obj = cls.__new__(cls)
+        obj.background_id_idx_map = None
+        obj.candidate_array = get_idx_array(cand_obj.annotated_variants)
+        obj.n_candidates = np.size(obj.candidate_array)
+        obj.n_candidate_per_function = permutation_fset_intersect(
+            (obj.candidate_array, function_set_obj.function_array2d))
+        obj.candidates_in_functions_df = candidates_per_set(obj.candidate_array, function_set_obj, annotation_obj)
         return obj
     @classmethod
     def union_of_objects(cls, a_obj, b_obj):
