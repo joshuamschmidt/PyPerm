@@ -126,7 +126,7 @@ def main():
     test_obj = sp.TestObject(nested_cand_objs[biggest], bg_variants, function_sets, annotations, n_cores = threads)
     perm_obj = sp.Permutation(test_obj, n_perms, threads)
     per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, threads)
-    results = make_nested_results_table(test_obj, function_sets, per_set, annotations)
+    results = sp.make_nested_results_table(test_obj, function_sets, per_set, annotations)
     # now have to split perms into smaller subsets
     results_list= [None] * len(c_files)
     results_list[0]=results
@@ -134,15 +134,15 @@ def main():
     per_set_list[0]=per_set
     for i in range(1, len(index_by_list_size), 1):
         this_idx=index_by_list_size[i]
-        this_perm=Permutation.nested_perm(perm_obj, n_genes_per_list[this_idx])
-        this_test = TestObject.nested_test(nested_cand_objs[this_idx], function_sets, annotations)
+        this_perm=sp.Permutation.nested_perm(perm_obj, n_genes_per_list[this_idx])
+        this_test = sp.TestObject.nested_test(nested_cand_objs[this_idx], function_sets, annotations)
         this_per_set = sp.SetPerPerm(this_perm, function_sets, this_test, threads)
-        this_result=make_nested_results_table(this_test, function_sets, this_per_set, annotations)
+        this_result=sp.make_nested_results_table(this_test, function_sets, this_per_set, annotations)
         results_list[i]=this_result
         per_set_list[i]=this_per_set
 
-    #single_results[j] = results
-    sp.results_writer(results, name, function_name, user_prefix)
+    merged_results=sp.combine_nested_results_table(results_list,per_set_list,nested_names, index_by_list_size)
+    sp.results_writer(merged_results, name, function_name, user_prefix)
         
 
 if __name__ == '__main__':

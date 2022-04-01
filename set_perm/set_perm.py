@@ -172,6 +172,7 @@ def combine_nested_results_table(results_list, per_set_list, nested_names, index
     # reorganiase col order
     merged_results=merged_results[['Label','Id','FunctionName','obs_n','perm_mean_n','enrich(log2)','p_enrich','fdr_enrich','BHfdr_enrich','p_deplete','fdr_deplete','BHfdr_deplete','Genes']]
     merged_results = merged_results.sort_values('p_enrich')
+    return merged_results
 
 
 def fdr_from_p_matrix(perm_n_per_set, obs_p, method='enrichment'):
