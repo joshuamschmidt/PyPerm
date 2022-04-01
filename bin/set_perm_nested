@@ -122,15 +122,21 @@ def main():
 
     # should proably have a check that each nested list is unique size. and that
     # all smaller lists are subsets of all larger ones?
+    sub_test_objs = []
+    sub_perm_objs = []
+    test_obj = sp.TestObject(nested_cand_objs[biggest], bg_variants, function_sets, annotations, n_cores = threads)
+    perm_obj = sp.Permutation(biggest_test_obj, n_perms, threads)
+    sub_perm_objs=[]
+    for i in range(1, len(index_by_list_size), 1):
+        this_idx=index_by_list_size[i]
+        sub_perm_objs.append(Permutation.nested_perm(perm_obj, n_genes_per_list[this_idx]))
 
-    test_obj = sp.TestObject(nested_cand_objs[index_by_list_size[0]], bg_variants, function_sets, annotations, n_cores = threads)
-    perm_obj = sp.Permutation(test_obj, n_perms, threads)
     # now have to split perms into smaller subsets>
-        per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, threads)
-        single_per_set[j] = per_set
-        results = sp.make_results_table(test_obj, function_sets, per_set, annotations)
-        #single_results[j] = results
-        sp.results_writer(results, name, function_name, user_prefix)
+    per_set = sp.SetPerPerm(perm_obj, function_sets, test_obj, threads)
+    single_per_set[j] = per_set
+    results = sp.make_results_table(test_obj, function_sets, per_set, annotations)
+    #single_results[j] = results
+    sp.results_writer(results, name, function_name, user_prefix)
         
 
 if __name__ == '__main__':
