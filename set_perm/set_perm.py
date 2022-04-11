@@ -141,11 +141,11 @@ def make_nested_results_table(test_obj, function_obj, set_perm_obj, annotation_o
     #out['u_95%(CI)'] = np.log2(e_array+sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(e_array+sem_array!=0))
     #out['l_95%(CI)'] = np.log2(e_array-sem_array, out=np.empty((np.shape(sem_array)[0],)) * np.nan, where=(e_array-sem_array!=0))
     out['p_enrich'] = set_perm_obj.p_enrichment
-    #out['fdr_enrich'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_enrich'], method='enrichment')
-    #out['BHfdr_enrich'] = p_adjust_bh(out['p_enrich'])
+    out['within_fdr_enrich'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_enrich'], method='enrichment')
+    out['within_BHfdr_enrich'] = p_adjust_bh(out['p_enrich'])
     out['p_deplete'] = set_perm_obj.p_depletion
-    #out['fdr_deplete'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_deplete'], method='depletion')
-    #out['BHfdr_deplete'] = p_adjust_bh(out['p_deplete'])
+    out['within_fdr_deplete'] = fdr_from_p_matrix(set_perm_obj.set_n_per_perm, out['p_deplete'], method='depletion')
+    out['within_BHfdr_deplete'] = p_adjust_bh(out['p_deplete'])
     #out_genes = candidates_per_set(test_obj, function_obj, annotation_obj)
     out = pd.merge(out, test_obj.candidates_in_functions_df, on='Id', how='outer')
     return out
@@ -153,8 +153,8 @@ def make_nested_results_table(test_obj, function_obj, set_perm_obj, annotation_o
 
 
 def combine_nested_results_table(results_list, per_set_list, nested_names, index_by_list_size, ):
-    mod_tables = [None] * len(c_files)
-    set_n_per_perm_list = [None] * len(c_files)
+    mod_tables = [None] * len(nested_names)
+    set_n_per_perm_list = [None] * len(nested_names)
     for i, size_index in enumerate(index_by_list_size):
         this_name=nested_names[size_index]
         this_table=results_list[i]
@@ -165,12 +165,12 @@ def combine_nested_results_table(results_list, per_set_list, nested_names, index
 
     merged_results=pd.concat(mod_tables)
     merged_set_n_per_perm=np.concatenate(set_n_per_perm_list, axis=0)
-    merged_results['fdr_enrich'] = fdr_from_p_matrix(merged_set_n_per_perm, merged_results['p_enrich'], method='enrichment')
-    merged_results['BHfdr_enrich'] = p_adjust_bh(merged_results['p_enrich'])
-    merged_results['fdr_deplete'] = fdr_from_p_matrix(merged_set_n_per_perm, merged_results['p_deplete'], method='depletion')
-    merged_results['BHfdr_deplete'] = p_adjust_bh(merged_results['p_deplete'])
+    merged_results['all_fdr_enrich'] = fdr_from_p_matrix(merged_set_n_per_perm, merged_results['p_enrich'], method='enrichment')
+    merged_results['all_BHfdr_enrich'] = p_adjust_bh(merged_results['p_enrich'])
+    merged_results['all_fdr_deplete'] = fdr_from_p_matrix(merged_set_n_per_perm, merged_results['p_deplete'], method='depletion')
+    merged_results['all_BHfdr_deplete'] = p_adjust_bh(merged_results['p_deplete'])
     # reorganiase col order
-    merged_results=merged_results[['Label','Id','FunctionName','obs_n','perm_mean_n','enrich(log2)','p_enrich','fdr_enrich','BHfdr_enrich','p_deplete','fdr_deplete','BHfdr_deplete','Genes']]
+    merged_results=merged_results[['Label','Id','FunctionName','obs_n','perm_mean_n','enrich(log2)','p_enrich','within_fdr_enrich','within_BHfdr_enrich','all_fdr_enrich','all_BHfdr_enrich','p_deplete','within_fdr_deplete','within_BHfdr_deplete','all_fdr_deplete','all_BHfdr_deplete','Genes']]
     merged_results = merged_results.sort_values('p_enrich')
     return merged_results
 

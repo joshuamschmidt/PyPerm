@@ -7,6 +7,9 @@ import textwrap
 from set_perm import set_perm as sp
 import pandas as pd
 import numpy as np
+from statsmodels.stats.multitest import fdrcorrection
+
+
 
 def tuple_type(strings):
     strings = strings.replace("(", "").replace(")", "")
@@ -76,21 +79,16 @@ optional.add_argument('--gene_def', dest='gene_def', type=int, default= 0,
 optional.add_argument('--threads', type=int, dest='threads',
                        help='multithreaded mode with int threads')
 
-#  sorted(annotations.annotation_table[annotations.annotation_table['Idx'].isin(test_obj.candidate_array[0])]['Annotation'].values)
-# sys.modules.pop('set_perm') 
-#  c_files = [ ('cut_2','data/central-2e-05-candidate.snps.bed.gz'), ('cut_1','data/central-0.000192-candidate.snps.bed') , ('cut_3','data/central-4e-05-candidate.snps.bed.gz')  ]
-# b_file='data/pbsnj-bg.snps.bed.gz'
 
 def main():
     args = parser.parse_args()
     annotations = sp.AnnotationSet(annotation_file=args.feature_def, range_modification=args.gene_def)
-    # annotations = sp.AnnotationSet(annotation_file='data/genes.txt', range_modification=2000)   
-    # function_sets = sp.FunctionSets(function_set_file='data/kegg.txt', min_set_size=10, annotation_obj=annotations) 
     function_sets = sp.FunctionSets(function_set_file=args.function_def, min_set_size=args.min_set_size, annotation_obj=annotations)
     function_name =  Path(args.function_def).stem
-    # check that cand and back files are correctly named.....
 
     # begin
+    c_files=args.c_files
+    bg=args.b_file[0]
     nested_cand_objs = [None] * len(c_files)
     nested_names = [None] * len(c_files)
     n_genes_per_list = [None] * len(c_files)
@@ -100,6 +98,7 @@ def main():
     user_prefix=args.user_prefix
     bg_variants =  sp.Variants(variant_file=bg)
     bg_variants.annotate_variants(annotation_obj=annotations)
+
 
     for j, c_file in enumerate(c_files):
         name, cands = c_file
@@ -142,8 +141,10 @@ def main():
         per_set_list[i]=this_per_set
 
     merged_results=sp.combine_nested_results_table(results_list,per_set_list,nested_names, index_by_list_size)
-    sp.results_writer(merged_results, name, function_name, user_prefix)
-        
+    out_name="_".join(sorted(nested_names))
+    sp.results_writer(merged_results, out_name, function_name, user_prefix)
+
+   # t_fdr=fdrcorrection(merged_results.iloc[:,7].values, alpha=0.05, method='indep', is_sorted=False)
 
 if __name__ == '__main__':
     main()
