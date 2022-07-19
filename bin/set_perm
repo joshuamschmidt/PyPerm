@@ -106,7 +106,7 @@ def main():
     args = parser.parse_args()
     annotations = sp.AnnotationSet(annotation_file=args.feature_def, range_modification=args.gene_def)
     # annotations = sp.AnnotationSet(annotation_file='data/genes.txt', range_modification=2000)   
-    # function_sets = sp.FunctionSets(function_set_file='data/kegg.txt', min_set_size=10, annotation_obj=annotations) 
+    # function_sets = sp.FunctionSets(function_set_file='data/kegg.txt', min_set_size=3, annotation_obj=annotations)
     function_sets = sp.FunctionSets(function_set_file=args.function_def, min_set_size=args.min_set_size, annotation_obj=annotations)
     function_name =  Path(args.function_def).stem
     # check that cand and back files are correctly named.....
